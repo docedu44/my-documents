@@ -46,6 +46,6 @@ html[data-theme='dark'] {
 }
 
 /* change direction of all of the div tag which has class with 'CodeBlock-' at the end */
-:root div[class^='codeBlockContent'] {
-  direction: ltr;
+:root div[class^='codeBlockContent'], .navbar-sidebar__items--show-secondary {
+  direction: ltr !important;
 }

@@ -14,13 +14,13 @@
 const config = {
   title: 'My Documents',
   tagline: 'Welcome',
-  url: 'https://devsteam.ir',
-  baseUrl: '/',
+  url: 'https://docedu44.github.io',
+  baseUrl: '/my-documents/',
   onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'warn',
   favicon: 'img/favicon.png',
-  organizationName: 'mohammad farhadi', // Usually your GitHub org/user name.
-  projectName: 'my documents', // Usually your repo name.
+  organizationName: 'docedu44', // Usually your GitHub org/user name.
+  projectName: 'my-documents', // Usually your repo name.
 
   presets: [
     [

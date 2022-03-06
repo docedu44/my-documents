@@ -1,0 +1,42 @@
+---
+title: Docusaurus
+---
+
+## Install
+برای نصب `docusaurus` باید از کد زیر استفاده کرد:
+```shell
+npx create-docusaurus@latest my-website facebook
+```
+اگر بخواهیم ک همراه با پیکربندی های `ts` باشد، کافیست ب انتهای دستور بالا `typescript--` اضافه کنیم.
+
+🎉 همچنین می توان بجای کلمه `facebook` ک پیکربندی های خاصی دارد، از `classic` هم استفاده کرد ک بدون هیچگونه تنظیمات خاصی می باشد.
+
+[docusaurus installation](https://docusaurus.io/docs/installation)
+
+### github pages
+برای استفاده از این لایبری در `github pages` باید ب صورت زیر عمل کرد:
+
+1. ابتدا باید در فایل `docusaurus.config.js` بعضی از موارد را تغییر دهیم:
+```js title="docusaurus.config.js"
+const config = {
+  title: 'My Documents',
+  tagline: 'Welcome',
+  url: 'https://docedu44.github.io', // https://نام یوزر.github.io
+  baseUrl: '/my-documents/', // /نام ریپو/
+  onBrokenLinks: 'throw',
+  onBrokenMarkdownLinks: 'warn',
+  favicon: 'img/favicon.png',
+  organizationName: 'docedu44', // یوزر نیم گیت هاب
+  projectName: 'my-documents', // نام ریپو
+}
+```
+2. حال باید کد های خود را یکبار ب ریپویی ک نام آن را ب عنوان `projectName` قرار داده ایم، `push` کنیم
+3. حال باید دستور زیر را طبق مستندات خود `docusaurus` در ترمینال وارد کنیم (`windows`):
+
+[docusaurus deployment](https://docusaurus.io/docs/deployment#deploy)
+```shell
+cmd /C "set "GIT_USER=<GITHUB_USERNAME>" && set "GIT_PASS=<GITHUB_PASSWORD>" && yarn deploy"
+```
+حتما باید توجه داشت ک بجای `<GITHUB_USERNAME>` نام یوزر و بجای `<GITHUB_PASSWORD>` باید `Personal Access Token` خود را وارد کنیم.
+
+🎉 همچنین می توان از `ssh` هم طبق مستندات استفاده کرد.
