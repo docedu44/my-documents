@@ -1,0 +1,32 @@
+---
+title: react and react native
+---
+🎉 بعضی مواقع ما نیاز داریم تا یک کامپوننت ایجاد کنیم و دیگر نیاز نداشته باشیم ک هر دفعه، `props` را برای آن مشخص کنیم و هر `prop` یی ک دادیم، خود ب خود اعمال شود:
+```jsx title="app/components/CustomTextInput.jsx"
+export const CustomTextInput = ({icon, ...otherProps}) => {
+  return (
+    <View>
+      <TextInput {...otherProps}/>
+      {icon && ( <MaterialCommunityIcons name={icon} size={20} color="#6e6969"/> )}
+    </View>
+  )
+}
+```
+حال کافیست در کامپوننت مورد نظر از این کامپوننت استفاده کنیم:
+```jsx title="app/screens/Login.jsx"
+const Login = () => {
+  return (
+            <CustomTextInput
+              icon={"email"}
+              placeholder="ایمیل کاربری"
+              placeholderTextColor="royalblue"
+              keyboardType="email-address"
+              autoComplete
+              autoCorrect={false}
+              onChangeText={handleChange("email")}
+              onBlur={() => setFieldTouched("email")}
+            />
+  )
+}
+export default Login();
+```
