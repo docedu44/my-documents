@@ -138,17 +138,7 @@ export default function Details({route}) {
 ما می توانیم به صورت زیر ب `header` صفحاتمان استایل بدهیم و این استایل را می توان صفحه ب صفحه بدهیم و یا ب صورت کلی یک استایل را برای همه اعمال کنیم:
 ```js
     <NavigationContainer>
-      <Stack.Navigator
-        screenOptions={{
-          headerTitleAlign: "center",
-          headerTintColor: "#fff",
-          headerStyle: {
-            backgroundColor: "#f4511e"
-          },
-          headerTitleStyle: {
-            fontWeight: "bold"
-          }
-        }}>
+      <Stack.Navigator>
         <Stack.Screen name="Home" component={Home} options={{
             title: "خانه",
             headerStyle: {
