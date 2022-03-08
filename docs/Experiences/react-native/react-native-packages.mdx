@@ -136,18 +136,18 @@ export default function Details({route}) {
 ```
 ### header style
 ما می توانیم به صورت زیر ب `header` صفحاتمان استایل بدهیم و این استایل را می توان صفحه ب صفحه بدهیم و یا ب صورت کلی یک استایل را برای همه اعمال کنیم:
-```jsx
+```js
     <NavigationContainer>
       <Stack.Navigator
         screenOptions={{
           headerTitleAlign: "center",
           headerTintColor: "#fff",
           headerStyle: {
-            backgroundColor: "#f4511e",
+            backgroundColor: "#f4511e"
           },
           headerTitleStyle: {
-            fontWeight: "bold",
-          },
+            fontWeight: "bold"
+          }
         }}>
         <Stack.Screen name="Home" component={Home} options={{
             title: "خانه",
@@ -157,7 +157,7 @@ export default function Details({route}) {
           }} />
         <Stack.Screen name="About" component={About} />
         <Stack.Screen name="Details" component={Details} initialParams={{ id: 3, text: "Bye Bye" }} options={{
-            title: "جزئیات",
+            title: "جزئیات"
           }}
         />
       </Stack.Navigator>
