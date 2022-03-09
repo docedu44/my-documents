@@ -2,7 +2,7 @@
   "name": "my-documents",
   "version": "0.0.0",
   "private": true,
-  "homepage": "https://docedu44.github.io/my-documents",
+  "homepage": "https://docedu44.github.io/my-documents/",
   "scripts": {
     "docusaurus": "docusaurus",
     "start": "docusaurus start",
