@@ -83,4 +83,88 @@ reword f7fde4a Change the commit message but push the same commit.
 6. سپس کد ساخته شده را در جایی ذخیره می کنیم و هر بار ک ب آن ریپو چیزی می فرستیم، باید ب عنوان رمز عبور از آن استفاده کنیم.
 
 ### github pages
+در واقع یک قابلیت خود `github` می باشد ک توسط آن می توان یک وب سایت را توسط خود گیتهاب بالا آورد، ک باید ب صورت زیر عمل کرد:
 
+1. ابتدا باید یک `repo` خالی بسازیم با یک نام دلخواه
+
+🎉 باید توجه داشت ک این نام بعدا ب عنوان `domain` نمایش داده می شود.
+
+2. حال در پروژه مان باید پکیج زیر را نصب کنیم:
+```shell
+yarn add gh-pages -D
+```
+3. سپس باید در فایل `package.json` تغییرات زیر را ایجاد کنیم:
+```json title="package.json"
+{
+  "name": "my-documents",
+  "private": true,
+  "homepage": "https://docedu44.github.io/my-documents/",
+  "scripts": {
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d build"
+  }}
+```
+در قسمت `homepage` باید آدرس کامل `repo` را بزنیم.
+
+4. حال باید دستور زیر را یکبار اجرا کنیم تا فولدر `build` ساخته شود:
+```shell
+npm run deploy
+```
+5. حال باید کد های خود را ب `repo` مان `push` کنیم
+6. حال وارد تب `Settings` و سپس `Pages` می شویم و در قسمت `Source` باید برنچ خود را به `gh-pages` تغییر می دهیم. (اگر این `branch` وجود نداشت، بعد از مورد 9، این گزینه را انتخاب می کنیم)
+7. حال باید در آدرس `repo` مان وارد تب `Actions` شویم و روی دکمه `New workflow` کلیک کنیم و سپس دکمه `Configure` خود `node.js` با لوگو خود نود را میزنیم.
+8. در صفحه جدید، فقط مواردی ک در کد های زیر هست و در کد های آن نیست، ب آن اضافه می کنیم: (فقط قسمت هایی ک کامنت `check` وجود دارد)
+
+[github pages deploy](https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-nodejs)
+```yaml
+# This workflow will do a clean installation of node dependencies, cache/restore them, build the source code and run tests across different versions of node
+# For more information see: https://help.github.com/actions/language-and-framework-guides/using-nodejs-with-github-actions
+name: Node.js CI
+
+on:
+  push:
+    branches: [ my-documents ]
+  pull_request:
+    branches: [ my-documents ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [16.x] # 1. check
+        # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
+
+    steps:
+    - uses: actions/checkout@v3 # 2. check
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v2 # 3. check
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+    - run: npm i # 4. check
+    - run: npm run build --if-present # 5. check
+
+    - name: Deploy 🚀 # 6. check
+      uses: JamesIves/github-pages-deploy-action@v4.2.5 # 7. check
+      with: # 8. check
+        branch: gh-pages # The branch the action should deploy to.
+        folder: build # The folder the action should deploy.
+```
+موارد 2، 3 و 7 را می توان از لینک های زیر آخرین ورژن آن ها را مشاهده کرد.
+
+[actions/checkout](https://github.com/actions/checkout)
+
+[actions/setup-node](https://github.com/actions/setup-node)
+
+[JamesIves/github-pages-deploy-action](https://github.com/JamesIves/github-pages-deploy-action)
+
+9. حال می توان یک نام برای این قرار داد و سپس دکمه `Start commit` سبز رنگ را می زنیم و بدون تغییر، دکمه `Commit new file` را می زنیم.
+
+🎉 همچنین می توان در تب `Settings` و `Branches`، برنچ اصلی را از `master` ب هر برنچ دیگری ک ساخته ایم، تغییر دهیم.
+
+🎉 لینک زیر یک لینک کمکی برای این موارد است:
+
+[How to Deploy React App to GitHub Pages](https://www.c-sharpcorner.com/article/how-to-deploy-react-application-on-github-pages/)
