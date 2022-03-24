@@ -163,8 +163,36 @@ export default function Details({route}) {
 ```jsx
     // Details.jsx
     <Button title='بروز رسانی هدر' onPress={() => navigation.setOptions({
-        title: "ممد"
+        headerShown: true,
+        title: route.params.course.title,
+        headerTitleStyle: {
+          fontFamily: "yekan",
+          color: "#fff",
+          fontSize: RFPercentage(2),
+        },
+        headerStyle: {
+          backgroundColor: "tomato",
+        },
+        headerTitleAlign: "center",
     })}/>
+```
+🎉 همچنین هرگاه بخواهیم در هنگام لود شدن یک کامپوننت، تغییراتی در `option` های یک `route` بدهیم، بهتر است از `useLayoutEffect` استفاده شود:
+```jsx
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerShown: true,
+      title: course.title,
+      headerTitleStyle: {
+        fontFamily: "yekan",
+        color: "#fff",
+        fontSize: RFPercentage(2),
+      },
+      headerStyle: {
+        backgroundColor: "tomato",
+      },
+      headerTitleAlign: "center",
+    });
+  }, [navigation, route]);
 ```
 🎉 همچنین می توان در سمت راست یا چپ `header` نیز از یک کامپوننت استفاده کرد یا یک `jsx` خاص قرار داد تا نمایش دهد و حتی یک کار خاصی انجام دهد:
 ```jsx
@@ -425,6 +453,36 @@ export default function Profile({navigation}) {
 ```
 🎉 همچنین می توان توسط `Stack.Group` صفحات را گروه بندی کرد و استایل های خاصی را ب هر گروه بدهیم
 
+### material top tab navigation
+توسط این `navigation` میتوان از تب های زیبای متریال استفاده کرد ک حالت `lazy load` هم دارد و می توان ب صورت تو در تو استفاده کرد:
+[material top navigator](https://reactnavigation.org/docs/material-top-tab-navigator/)
+```shell
+yarn add @react-navigation/material-top-tabs react-native-tab-view react-native-pager-view
+```
+🎉 همچنین میتوان بجای `yarn add` از `expo install` نیز استفاده کرد و نیاز ب نصب پکیج دوم نیست.
+```jsx
+const TopTab = createMaterialTopTabNavigator();
+
+const TopTabNavigator = () => {
+  return (
+    <TopTab.Navigator initialRouteName="Courses" screenOptions={{
+      tabBarActiveTintColor: "tomato",
+      tabBarInactiveTintColor: "gray",
+      tabBarLabelStyle: {fontFamily: "ih",fontSize: 14},
+      tabBarStyle: {backgroundColor: "#f8f4f4"}
+    }} backBehavior="none">
+      <TopTab.Screen name="AllCourses" component={Courses} options={{tabBarLabel: "همه دوره ها"}}/>
+      <TopTab.Screen name="NewCourses" component={NewCourses} options={{tabBarLabel: "دوره های جدید"}}/>
+      <TopTab.Screen name="TopCourses" component={TopCourses} options={{tabBarLabel: "دوره های محبوب"}}/>
+    </TopTab.Navigator>
+  );};
+```
+طریقه استفاده آن مانند بقیه `navigation` ها می باشد.
+
+🎉 هر گاه بخواهیم برای یک `navigation` دکمه `back` گوشی را تغییر دهیم، میتوانیم از گزینه `backBehavior` استفاده کنیم ک مقادیر مختلفی دارد ک در مستندات آن موجود می باشد.
+
+🎉 باید در نظر داشت ک در `nested navigation` باید در `navigation` والد، یکی از `route` ها را ب `navigation` ک میخواهیم در صفحه مورد نظر نمایش داده شود اختصاص دهیم.
+
 ## react-native-community/hooks@
 یکی از پکیج های عالی برای دسترسی ب موارد زیر در `React Native` می باشد:
 
@@ -461,3 +519,80 @@ export default function App() {
     </View>
   );}
 ```
+## Responsive
+### react-native-responsive-fontsize
+بری رسپانسیو کردن `font` ها در دستگاه های مختلف، می توان از پکیج زیر استفاده کرد
+```shell
+yarn add react-native-responsive-fontsize
+```
+```jsx
+import { RFPercentage } from "react-native-responsive-fontsize";
+
+export const CustomText = ({ size=1, fontFamily="ih", children, styles={} }) => {
+  return <Text style={[{ fontFamily, fontSize: RFPercentage(size) }, styles]}>{children}</Text>
+};
+```
+ک این پکیج ب ما 2 تابع می دهد ک ما برای رسپانسیو کردن از `RFPercentage(size)` استفاده می کنیم ک ب صورت سایز ها را ب صورت درصد تبدیل می کند تا مقدار نصبی داشته باشند.(مانند `rem`)
+
+همچنین میتوان ب صورت زیر نیز در بخش های مختلف از آن استفاده کرد(اگر ب اروری خوردیم باید از `expo doctor`) استفاده کنیم
+```jsx
+    <TopTab.Navigator
+      screenOptions={{
+        tabBarLabelStyle: {
+          fontFamily: "ih",
+          fontSize: RFPercentage(1.5),
+        },}}> {/*...*/} </TopTab.Navigator>
+```
+## etc
+### react-native-gesture-handler
+توسط این پکیج می توان انیمیشن ها و توابعی برای استفاده از آپشن های `swip` و غیره بسازیم ک می توان ب صورت زیر از آن استفاده کرد:
+
+[swipeable](https://docs.swmansion.com/react-native-gesture-handler/docs/api/components/swipeable/)
+```jsx
+import { Swipeable } from "react-native-gesture-handler";
+
+const ConfirmationAlert = (course, onPress) => {
+  return Alert.alert( course.title, `مطمئنی می خوایی ${course.title} رو ز لیست دوره هات پاک کنی ؟`,
+    [
+      { text: "انصراف", onPress: () => {}, style: "cancel"},
+      { text: "آره، پاک کن", onPress: onPress},
+    ],
+    { cancelable: false }
+  );
+};
+
+const DeleteAction = (course, onPress ) => {
+  return (
+    <TouchableOpacity onPress={() => ConfirmationAlert(course, onPress)}>
+      <View style={{ backgroundColor: "tomato", height: "100%", justifyContent: "center", }} >
+        <Icon name="delete" size={50} backgroundColor="transparent" />
+      </View>
+    </TouchableOpacity>
+  );};
+
+export const MyCourses = () => {
+  const [myCourses,] = useState([...]);
+  const handleDelete = (course) => {
+  setMycourses([...myCourses].filter(item => item.id !== course.id))
+}
+  return (
+    <ScreenLayout style={{ alignItems: "center" }}>
+        <FlatList data={myCourses} keyExtractor={(c) => c.id.toString()} renderItem={({ item }) => (
+            <View>
+              <Swipeable renderRightActions={() => DeleteAction(item, () => handleDelete(item))}>
+                    <CustomText size={2.5} fontFamily="yekan">
+                      {item.title}
+                    </CustomText>
+              </Swipeable>
+            </View>
+          )}/>
+    </ScreenLayout>
+  );};
+```
+ک توسط `renderRightActions` میتوان هنگام کشیدن ب سمت راست یک قسمت دیگر را نمایش دهیم یا یک تابع را اجرا کنیم ک همین قابلیت برای سمت چپ نیز وجود دارد.
+
+🎉 برای کامپوننت `Alert` می توان از این ساختار استفاده کرد:
+
+`Alert.alert(title, message?, buttons?, options?)`
+
+ک `buttons` آرایه و `options` یک آبجکت می باشد.

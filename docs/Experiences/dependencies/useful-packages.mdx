@@ -101,6 +101,9 @@ import * as Yup from "yup";
 const validationSchema = Yup.object().shape({
   email: Yup.string().required("این فیلد الزامی می باشد").email(),
   password: Yup.string().required("این فیلد الزامی می باشد").min(4),
+  passwordConfirmation: Yup.string()
+    .required("این فیلد الزامی می باشد")
+    .equals([Yup.ref("password"), null], "کلمه عبور یکی نیست"), /*دو فیلد را باهم مقایسه کرد ک در هر 2 باید رفرنس بدهیم oneOf یا equals می توان توسط*/
 });
 export const MyComponent = () => {
   return (
@@ -111,6 +114,8 @@ export const MyComponent = () => {
               <ErrorMessage error={errors.email} touched={touched.email}/>
               <TextInput onChangeText={handleChange("password")} onBlur={() => setFieldTouched("password")} />
               <ErrorMessage error={errors.password} touched={touched.password}/>
+              <TextInput onChangeText={handleChange("passwordConfirmation")} onBlur={() => setFieldTouched("passwordConfirmation")} />
+              <ErrorMessage error={errors.passwordConfirmation} touched={touched.passwordConfirmation}/>
               <Button title="ورود کاربر" onPress={handleSubmit} />
           </>
         )}
@@ -129,4 +134,20 @@ const ErrorMessage = ({ error, touched }) => {
   if (!touched || !error) return null;
   return <Text style={styles.error}>{error}</Text>;
 };
+```
+### useFormikContext
+یکی از قابلیت های `formik` می باشد ک تمامی موارد قابل استفاده `formik` را در قالب `context` ب ما می دهد ک می توانیم کامپوننت های بهتری ب عنوان کامپوننت های `reusable` بسازیم
+```jsx
+export const CustomFormField = ({ name, ...props }) => {
+    const {handleChange, setFieldTouched, errors, touched} = useFormikContext();
+  return (
+    <>
+      <CustomTextInput
+        {...props}
+        onChangeText={handleChange(name)}
+        onBlur={() => setFieldTouched(name)}
+      />
+      <ErrorMessage error={errors[name]} touched={touched[name]} /> {/*ارسالی ب این کامپوننت را در آبجکت ارور پیدا کرد name توسط این قابلیت می توان*/}
+    </>
+  );};
 ```
