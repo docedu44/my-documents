@@ -1,0 +1,18 @@
+---
+title: packages
+---
+## router
+برای نصب روتر باید از دستور زیر استفاده کنیم:
+```shell
+yarn add react-router-dom
+```
+حال باید در `index.js` از آن استفاده کنیم:
+```jsx
+ReactDOM.render(
+  <BrowserRouter>
+    <App />
+  </BrowserRouter>,
+  document.getElementById("root")
+);
+```
+حال می توان همه جای برنامه از `Routes` استفاده کنیم

@@ -127,6 +127,8 @@ export default function App() {
 ```
 ### Image
 توسط این کامپوننت می توان عکس ها را در برنامه هایمان استفاده کنیم، بهتر است عکس ها از یک منبع خارجی باشد، یعنی بهتر است کمتر از فایل های `static` استفاده کنیم ( `prop` زیادی دارد و حتما داکیومنت خوانده شود ).
+
+[Image](https://reactnative.dev/docs/image)
 ```jsx
       <View>
         <Image
@@ -148,6 +150,8 @@ export default function App() {
 🎉 سعی شود از استایل های کپسوله شده استفاده شود، یعنی مواردی ک می دانیم در خیلی جاها استفاده می شود را در یکجا قرار دهیم و
 از آن در همه جا استفاده کنیم، یعنی از قانون `DRY` استفاده کنیم.
 
+🎉 هرگاه بخواهیم یک عکس را از اینترنت در کد هایمان استفاده کنیم باید از `uri` در `source` استفاده کنیم.
+
 ### ImageBackground
 هرگاه بخواهیم ب صورت پیش کانتینر `View` ما دارای عکس پس زمینه باشد، می توان از این تگ استفاده کرد:
 ```jsx
@@ -159,3 +163,29 @@ const Welcome = () => {
   )}
 ```
 🎉 همچنین می توان برای اینکه پس زمینه کمی تار شود از ویژگی `blurRadius` استفاده کنیم.
+
+### ActivityIndicator
+هرگاه بخواهیم هنگام لود شدن داده ها، یک لودینگ قرار دهیم، می توانیم از این قابلیت خود `react native` استفاده کنیم:
+
+[ActivityIndicator](https://reactnative.dev/docs/activityindicator)
+```jsx
+import {ActivityIndicator,} from "react-native";
+
+export const Courses = ({ navigation }) => {
+  const [courses, setCourses] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    axios.get("https://rnapi.ghorbany.dev/api/courses", { headers: { "Content-Type": "application/json", }})
+      .then(({ data }) => setCourses(data.courses))
+      .catch((e) => console.log(e))
+      .finally(() => setLoading(false));
+  }, []);
+
+  return (
+    <ScreenLayout style={styles.container}>
+      {loading && <ActivityIndicator size="large" color="tomato" animating={loading} />}
+      {/*...*/}
+    </ScreenLayout>
+  ); };
+```

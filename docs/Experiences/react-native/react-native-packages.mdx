@@ -22,6 +22,9 @@ yarn add react-native-screens react-native-safe-area-context
 
 🎉 در `react native` به 2 صورت می توان از `navigation` استفاده کرد ک 1. `Drawer` و 2. `stack` می باشد ک اولی به صورت منوی کشویی می باشد و دومی هم می توان ب صورت لینک در جاهای مختلف برنامه استفاده کرد.
 
+🎉 هر کدام از `navigation` ها ب صورت زیر کنترل می شوند:
+[navigation state](https://reactnavigation.org/docs/navigation-state/)
+
 ### Stack
 برای استفاده از `Stack` باید آن را نصب کنیم:
 ```shell
@@ -86,6 +89,8 @@ export default function Home(props) {
 ```
 🎉 مواردی ک ارسال می شود توسط `NavigationContainer` شامل موارد بسیاری می باشد ک اگر لاگ بگیریم، موارد زیادی دارد ک همه تابع هستند:
 
+[navigation props](https://reactnavigation.org/docs/navigation-prop)
+
 `canGoBack`:
 برای چک کردن زمانی ک آیا می توان ب صفحه قبل بازگشت یا خیر
 
@@ -108,6 +113,44 @@ export default function Home(props) {
 
 `replace`:
 زمانی استفاده می شود ک بخواهیم مثلا در صفحه لاگین، بعد از ورود کاربر، دیگر دکمه بازگشتی نمایش داده نشود و صفحه مورد نظر ما بشود اولین صفحه `stack` مان
+```jsx title="./app/stacks/Welcome.jsx"
+          if (decodedToken.user.userId === userId) {
+            navigation.replace("Home");
+          } else {
+            await AsyncStorage.removeItem("token");
+            await AsyncStorage.removeItem("userId");
+            navigation.navigate("Login");
+          }
+```
+
+`reset`:
+هرگاه بخواهیم در قسمتی، تمامی `stack` ها حذف کنیم و ب یک مسیر خاص برویم و آن مسیر را شروع کننده اصلی قرار دهیم، از این متد استفاده می کنیم (مانند صفحه لاگین ب صفحه خانه)
+```jsx title="./app/stacks/Login.jsx"
+  const handleUserLogin = async (user) => {
+    try {
+      loadingToast("در حال برقراری ارتباط...");
+      const { data, status } = await login(user);
+      if (status === 200) {
+        hideToast();
+        await AsyncStorage.setItem("token", JSON.stringify(data.token));
+        await AsyncStorage.setItem("userId", JSON.stringify(data.userId));
+        successToast("ورود موفقیت آمیز بود.");
+        // navigation.navigate("Home");
+        navigation.reset({
+          index: 0,
+          routes: [{name: "Home"}]
+        })
+      } else {
+        hideToast();
+        customToast("ایمیل کاربر یا کلمه عبور صحیح نمی باشد");
+      }
+    } catch (e) {
+      hideToast();
+      customToast("ایمیل کاربر یا کلمه عبور صحیح نمی باشد");
+    }
+  };
+```
+در واقع `index` برای مشخص کردن این است ک از چه نقطه ای می خواهیم ک مسیر ها `reset` شوند و `routes` هم تغیین کنند مسیر هایی است ک میخواهیم بمانند و در واقع جایگزین `routes` اصلی بشوند.
 
 ### send prop to another page
 ما می توانیم به صورت بین صفحات، داده ارسال کنیم:
@@ -134,6 +177,7 @@ export default function Details({route}) {
 // app.jsx
 <Stack.Screen name="Details" component={Details} initialParams={{id: 3, text: "Bye Bye"}} />
 ```
+🎉 از `prop` های ارسالی بین `route` ها زیاد استفاده شود، مثل ارسال `prop` یی بعد از ثبت نام و ارسال کاربر ب لاگین و نمایش یک پیغام برای موفقیت آمیز بودن ثبت نام.
 ### header style
 ما می توانیم به صورت زیر ب `header` صفحاتمان استایل بدهیم و این استایل را می توان صفحه ب صفحه بدهیم و یا ب صورت کلی یک استایل را برای همه اعمال کنیم:
 ```js
@@ -483,6 +527,36 @@ const TopTabNavigator = () => {
 
 🎉 باید در نظر داشت ک در `nested navigation` باید در `navigation` والد، یکی از `route` ها را ب `navigation` ک میخواهیم در صفحه مورد نظر نمایش داده شود اختصاص دهیم.
 
+### StackActions
+تمامی `navigation` ها دارای یک تابع خاص برای کنترل کردن مسیر ها دارند ک در اینجا ما فقط `StackActions` را توضیح می دهیم و بقیه هم ب همین شکل هستند:
+
+[StackActions](https://reactnavigation.org/docs/stack-actions)
+```jsx title="./app/stacks/Welcome.jsx"
+import { StackActions } from "@react-navigation/native";
+
+          if (decodedToken.user.userId === userId) {
+            // navigation.replace("Home");
+            navigation.dispatch(
+              StackActions.replace("Home")
+            )
+          } else {
+            await AsyncStorage.removeItem("token");
+            await AsyncStorage.removeItem("userId");
+            navigation.navigate("Login");
+          }
+```
+همچنین می توان `param` هم ارسال کرد.
+
+🎉 در واقع توسط `replace`، مسیر جدید با مسیر ها قبلی جایگزین می شود و کاربر نمی تواند ب عقب برگردد.
+
+### useNavigationState
+🎉 توسط `useNavigationState`  می توانیم ب اطالاعات کامل هر `route` دسترسی داشته باشیم.
+
+[useNavigationState](https://reactnavigation.org/docs/use-navigation-state/)
+
+**مثال** :
+[useNavigationState](/my-documents/docs/Experiences/react-native/react-native-features#double-touch-back)
+
 ## react-native-community/hooks@
 یکی از پکیج های عالی برای دسترسی ب موارد زیر در `React Native` می باشد:
 
@@ -571,7 +645,7 @@ const DeleteAction = (course, onPress ) => {
   );};
 
 export const MyCourses = () => {
-  const [myCourses,] = useState([...]);
+  const [myCourses,] = useState(["..."]);
   const handleDelete = (course) => {
   setMycourses([...myCourses].filter(item => item.id !== course.id))
 }
@@ -596,3 +670,100 @@ export const MyCourses = () => {
 `Alert.alert(title, message?, buttons?, options?)`
 
 ک `buttons` آرایه و `options` یک آبجکت می باشد.
+
+### react-native-tiny-toast
+توسط این پکیج می توان یک `toast` را هم برای `android` و هم برای `ios` نمایش داد
+
+[react-native-tiny-toast](https://www.npmjs.com/package/react-native-tiny-toast)
+```shell
+yarn add react-native-tiny-toast
+```
+```jsx
+import Toast from "react-native-tiny-toast"
+
+const TopTabNavigator = () => {
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        Toast.showLoading("در حال بارگذاری...", {
+          position: Toast.position.CENTER,
+          textStyle: { fontFamily: "yekan", fontSize: RFPercentage(1.5)},
+          shadow: true
+        })
+        const courses = await fetchCourses();
+        setCourses(courses);
+      } catch (e) {
+        return e;
+      } finally {
+        Toast.hide();
+      }
+    };
+    fetchData();
+  }, []);
+
+  return (
+    <context.Provider value={{courses,}}>
+        <TopTab.Navigator>{/*...*/}</TopTab.Navigator>
+    </context.Provider>
+  );};
+```
+### async-storage
+برای اینکه ما اطلاعات ورود کاربر را مانند مرورگر (`localStorage`) جایی ذخیره کنیم، می توانیم از این پکیج استفاده کنیم:
+
+[Async Storage](https://react-native-async-storage.github.io/async-storage/docs/usage)
+```shell
+expo install @react-native-async-storage/async-storage
+
+OR
+
+yarn add @react-native-async-storage/async-storage
+```
+```jsx
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
+const Login = ({ navigation, route }) => {
+  const handleUserLogin = async (user) => {
+    try {
+      loadingToast("در حال برقراری ارتباط...");
+      const { data, status } = await login(user);
+      if (status === 200) {
+        hideToast();
+        await AsyncStorage.setItem("token", JSON.stringify(data.token));
+        successToast("ورود موفقیت آمیز بود.");
+        navigation.navigate("Home");
+      }
+    } catch (e) {
+      hideToast();
+      customToast("ایمیل کاربر یا کلمه عبور صحیح نمی باشد");
+    }
+  };}
+```
+باید دقت داشت ک حتما باید ب صورت `await` و داده هایی ک میخواهییم در آن ذخیره بشوند را ب صورت `string` شده باید ذخیره کنیم.
+
+🎉 مانند `localStorage` دارای 2 متد `setItem` و `getItem` و `removeItem` می باشد.
+
+🎉 همچنین ما می توانیم در صفحه `Welcome` هنگام لود شدن پروژه، چک کنیم ک کاربر `token` و `userId` دارد و اگر داشت، مستقیما ب صفحه اول برنامه برود و اگر نداشت و یا `token` دستکاری شده بود، ب صفحه لاگین برود
+```jsx title="./app/stacks/Welcome.jsx"
+  useEffect(() => {
+    const checkForNet = async () => {
+      const state = await NetInfo.fetch();
+      if (!state.isConnected){
+         confirmationAlert();
+      } else {
+        const token = await AsyncStorage.getItem("token");
+        const userId = JSON.parse(await AsyncStorage.getItem("userId"));
+        if (token !== null && userId !== null) {
+          const decodedToken = decodeToken(token);
+          if (decodedToken.user.userId === userId) {
+            navigation.navigate("Home");
+          } else {
+            await AsyncStorage.removeItem("token");
+            await AsyncStorage.removeItem("userId");
+            navigation.navigate("Login");
+          }
+        }
+      }
+    };
+    checkForNet();
+  }, []);
+```

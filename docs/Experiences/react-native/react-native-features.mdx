@@ -213,3 +213,40 @@ const styles = StyleSheet.create({
     },
 })
 ```
+
+### BackHandler
+ توسط قابلیت `BackHandler` ک مربوط ب خود `React Native` می باشد و فقط روی **`Android`** کار می کند، می توان برنامه را تحت شرایط خاصی، ببندیم.
+
+[BackHandler](https://reactnative.dev/docs/backhandler)
+
+**مثال** :
+[NetInfo](/my-documents/docs/Experiences/react-native/expo-packages#netinfo)
+
+#### Double touch back
+هر گاه بخواهیم کاربر برای خروج از برنامه 2 بار دکمه بازگشت را بزند، می توانیم ب صورت زیر عمل کنیم:
+```jsx title="./app/stacks/Welcome.jsx"
+import { useNavigationState } from "@react-navigation/native";
+
+  const routeIndex = useNavigationState((state) => state.index);
+
+  useEffect(() => {
+    let currentCount = 0;
+    if (routeIndex <= 0) {
+      BackHandler.addEventListener("hardwareBackPress", () => {
+        if (currentCount === 1) {
+          BackHandler.exitApp();
+          return true;
+        }
+        currentCount += 1;
+        customToast("برای خروج دوباره لمس کنید.");
+        setTimeout(() => {
+          currentCount = 0;
+        }, 1000);
+        return true;
+      });
+    }
+  }, []);
+```
+حتما باید برای`addEventListener` در هر شرط، مقداری را `return` کنیم.
+
+
