@@ -49,3 +49,7 @@ html[data-theme='dark'] {
 :root div[class^='codeBlockContent'], :root div[class^='codeBlockTitle'], .navbar-sidebar__items--show-secondary {
   direction: ltr !important;
 }
+.menu__link--sublist-caret:after {
+  margin-right: auto !important;
+  margin-left: unset !important;
+}

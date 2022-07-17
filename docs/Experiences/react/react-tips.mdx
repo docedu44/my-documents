@@ -51,7 +51,18 @@ title: Tips
 3. `defaultProps`
 4. `contextTypes`
 
-```tsx
+🎉 توسط پکیج `prop-types` می توان در `jsx` و هنگام ساخت کامپوننت برای عموم، `prop` ها را `validate` کرد.
+```jsx title="propTypes"
+import PropTypes from 'prop-types';
+
+    export const Child = ({color}) => {
+    return <h1>{color}</h1>
+}
+    Child.propTypes = {
+    color: PropTypes.string
+}
+```
+```tsx title="defaultProps"
     interface ChildProps {
     color: string;
 }
@@ -61,7 +72,7 @@ title: Tips
     Child.defaultProps = {
     color: "blue"
 }
-    //! OR
+    //! OR -------------------------------------------------------
     export const ChildAsFC : React.FC<ChildProps> = ({color}) => {
     return <div>{color}</div>
 }
@@ -101,4 +112,58 @@ title: Tips
     person.completed = !person.completed;
     setPersons(allPerson);
   };
+```
+
+🎉 بهتر است هیچوقت از `npm run eject` استفاده نکنیم زیرا دیگر نمی توان از قابلیت های `create-react-app` استفاده کرد، مگر زمانی ک بخواهیم پیکربندی های `babel` یا `webpack` یا مابقی موارد را ببینیم ک در فولدر `config` بعد از `eject` قرار می گیرند.
+
+#### import SVG
+می توان ب صورت زیر نیز از فایل های `svg` نیز استفاده کرد ک ب ما در کنترل بهتر آن ها کمک می کند (نمی توان مانند تگ `img` از `alt` استفاده کنیم.)
+```tsx
+import { ReactComponent as IconMenu } from './icons/menu.svg'
+
+export const ButtonMenu = ({ onClick }) => {
+  return (
+    <button onClick={onClick}>
+	    <span>Open Menu</span>
+	    <IconMenu width="1rem" className="bg-red"/>
+    </button>
+  )}
+```
+#### valid JSX or TSX
+ما می توانیم درون متغیر های خارج از `return` نیز از `jsx` یا `tsx` نیز استفاده کنیم و سپس درون `return` از آن ها استفاده کنیم (همچنین می توان شرط ها و حلقه ها را نیز درون آن نوشت و در `return` آن ها را استفاده کرد) :
+```jsx
+export const ButtonMenu = ({ onClick }) => {
+  const MenuTitle = <span>Open Menu</span>
+  return (
+    <button onClick={onClick}>
+	    <MenuTitle/>
+	    <IconMenu width="1rem" className="bg-red"/>
+    </button>
+  )}
+```
+🎉 همچنین می توان کد های بالا را ب صورت زیر نیز نوشت :
+```jsx
+export const ButtonMenu = ({ onClick }) => {
+  const menuTitle = <span>Open Menu</span>
+  return (
+    <button onClick={onClick}>
+      {menuTitle}
+      <IconMenu width="1rem" className="bg-red"/>
+    </button>
+  )}
+```
+🎉 همچنین می توان بخش های مختلف را خارج از تابع اصلی نوشت و درون آن، آن ها را فراخواند.
+```tsx
+const LayoutChecker = ({layout, name, children}: ILayoutCheckerProps) => {
+    if (layout === "second") {
+        return <MainLayout name={name}>{children}</MainLayout>
+    } else if (layout === "first") {
+        return <WrapperLayout name={name}>{children}</WrapperLayout>
+    } else {
+        return <BlankLayout>{children}</BlankLayout>
+    }
+}
+const GuardRoute: FC<IGuardRouteProps> = ({children, layout, name,}) => {
+    return <LayoutChecker layout={layout} name={name} children={children}/>
+};
 ```

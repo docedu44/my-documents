@@ -389,16 +389,14 @@ export default function App() {
 
 ### nested navigation
 می توان برای اینکه از چند مدل `navigation` استفاده کنیم ب صورت زیر عمل کنیم:
-```jsx
-        // App.js
+```jsx title="App.js"
       <Stack.Navigator>
         <Stack.Screen name="Home" component={Home} options={{ headerShown: false }} />
         <Stack.Screen name="Information" component={Information} />
       </Stack.Navigator>
 ```
 حال می توان در یکی از این صفحات اصلی، از یکی دیگر از `navigation` ها استفاده کنیم:
-```jsx
-    // Home.js
+```jsx title="Home.js"
     <Tab.Navigator>
       <Tab.Screen name="Settings" component={Settings}/>
       <Tab.Screen name="Profile" component={Profile}/>
@@ -407,8 +405,7 @@ export default function App() {
 ب این صورت وقتی وارد صفحه `Home` می شویم، در قسمت پایینی صفحه می توان `Tab navigation` را ببینیم.
 
 همچنین میتوان در صفحه `Settings` یک دکمه قرار دهیم ک مارا ب `Information` ک در `Stack` می باشد ببرد:
-```jsx
-    // Settings.js
+```jsx title="Settings.js"
       <Button title="Go to Information" onPress={() => navigation.navigate("Information")}/>
 ```
 
@@ -423,8 +420,7 @@ export default function App() {
 🎉 همچنین `UI` نویگیتور والد بالای `UI` نویگیتور فرزند رندر می شود، به طور مثال اگر یک `Drawer` فرزند یک `Stack` باشد، هنگام باز شدن، زیر `Stack` باز می شود
 
 🎉 همچنین ما میتوانیم ب صورت زیر از حالت `nested` استفاده کنیم و برای هر چند صفحه، یک والد در نظر بگیریم:
-```jsx
-        // App.js
+```jsx title="App.js"
     <NavigationContainer>
       <Tab.Navigator>
         <Tab.Screen name="first" options={{headerShown: false}}>
@@ -454,8 +450,7 @@ export default function App() {
 
 ### navigation life cycle
 برای اینکه هنگام هربار ورود کاربر ب یک صفحه، یک تابعی یا کدی را اجرا کنیم، چند راه وجود دارد
-```jsx
-// Profile.js
+```jsx title="Profile.js"
   useEffect(() => {
     return navigation.addListener("focus", () => {
       alert("mamad")
@@ -766,4 +761,56 @@ const Login = ({ navigation, route }) => {
     };
     checkForNet();
   }, []);
+```
+### Icons
+برای استفاده از `icon` ها در `RN` می توان از پکیج زیر استفاده کرد :
+```shell
+yarn add react-native-vector-icons
+```
+سپس برای استفاده باید فایل `build` موجود در فولدر `android/app` زیر را تغییر دهیم (در انتهای کد ها قرار داده شود):
+
+`android/app/build.gradle`
+```text
+project.ext.vectoricons = [
+    iconFontNames: [ 'MaterialIcons.ttf', 'EvilIcons.ttf' ] // Name of the font files you want to copy
+]
+
+apply from: "../../node_modules/react-native-vector-icons/fonts.gradle"
+```
+اگر نام پکیج های مورد نیاز را بدهیم، باعث سبک شدن پروژه می شویم، در غیر اینصورت می توان 3 خط اول را ننوشت و تمام آیکون های موجود را ب پروژه اضافه کنیم.
+
+- برای بقیه سیستم عامل ها نیز می توان از این مسیر تمامی اطالاعات مربوطه را پیدا کرد:
+[react-native-vector-icons](https://github.com/oblador/react-native-vector-icons)
+
+- همچنین از این صفحه می توان لیست آیکون ها را مشاهده کرد:
+[vector icons list](https://oblador.github.io/react-native-vector-icons/)
+
+می توان ب صورت زیر از آیکون های اضافه شده، استفاده کرد:
+
+[Example](https://github.com/oblador/react-native-vector-icons#examples)
+```jsx
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+
+function ExampleView(props) {
+  return <MaterialIcons name="ios-person" size={30} color="#4F8EF7" />;
+}
+```
+
+### Tips
+:::caution Important
+
+حتما حتما بعد از هربار نصب پکیج جدید یا تغییرات در قسمت های اصلی پروژه مانند `babel.config.js` یا `app.json` و... باید پروژه را دوباره طبق مراحل زیر، بیلد بگیریم زیرا باید پکیج ها و تغییرات جدید به فایل `apk` نصب شده، الصاق شوند.
+
+:::
+1. پاک کردن کش های `gradle`
+```shell
+cd android && ./gradlew clean
+```
+2. بیلد دوباره برنامه
+```shell
+yarn android
+```
+3. پاک کردن کش `metro` و استارت پروژه
+```shell
+yarn start --reset-cache
 ```

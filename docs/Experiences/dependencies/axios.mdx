@@ -1,0 +1,30 @@
+
+## Install
+برای نصب می توان از دستور زیر استفاده کرد:
+```shell
+yarn add axios
+```
+
+### Abort req
+برای کنسل کردن درخواست ها می توان ب صورت زیر در `react` هنگام `unmount` شدن کامپوننت استفاده کرد:
+```tsx
+  const getAllData = async (signal) => {
+    try {
+      setIsLoading(true);
+      const {data} = await axios.get<ISystems[]>(`/system_code`, {signal})
+      setSystems(data);
+    } catch (e) {
+      return e;
+    }};
+
+  useEffect(() => {
+    const controller = new AbortController();
+    getAllData(controller.signal);
+    return () => {
+      controller.abort();
+    }
+  }, []);
+```
+🎉 همچنین می توان از متد `()abort` مثلا روی دکمه نیز استفاده کرد ک با زدن یک دکمه، درخواست هایی ک در حالت `pending` هستند را کنسل کند.
+
+🎉 همچنین خود `signal` نیز دارای `event` ها و موارد دیگری برای `onabort` یا `aborted` دارد ک می توان از آن ها نیز استفاده کرد.
