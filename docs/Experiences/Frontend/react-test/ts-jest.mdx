@@ -1,0 +1,388 @@
+---
+id: ts-jest
+title: testing best practices
+---
+### ts-jest
+1. توسط این پکیج می توان برای کامپوننت های `react` ک با `typescript` نوشته شده اند، تست نوشت ک به صورت زیر می توان در اپلیکیشن `react`یی خود آن را نصب کرد:
+
+[ts-jest](https://kulshekhar.github.io/ts-jest/docs/getting-started/installation)
+```shell
+yarn add jest typescript ts-jest @types/jest -D
+```
+2. سپس توسط کد زیر می توان فایل کانفیگ آن را به پروژه اضافه کرد:
+```shell
+npx ts-jest config:init
+```
+3. حال باید به `package.json` کد زیر را اضافه کنیم:
+```json
+{
+  "scripts": {
+  "test": "jest"
+  }
+}
+```
+🎉 برای ساخت فایل تست برای هر کامپوننت باید بعد از نام آن از کلمه `spec` یا `test` استفاده کنیم، مثل : `sum.spec.ts` یا `sum.test.ts`
+```ts title="sum.ts"
+export const sum = (a: number, b: number) => {
+    return a + b
+}
+```
+```ts title="sum.spec.ts"
+import { sum } from './sum';
+it("Summing 5 and 2 will return 7", ()=> {
+    expect(sum(5, 2)).toBe(7)
+})
+```
+
+4. سپس برای استفاده از متد های از پیش ساخته شده برای تست در `react` می توان از پکیج `react testing library` استفاده کنیم:
+
+[react testing library](https://testing-library.com/docs/react-testing-library/intro)
+
+```shell
+yarn add @testing-library/react @testing-library/user-event @testing-library/dom @testing-library/jest-dom -D
+```
+
+5. حال برای اینکه کامپوننت های `react` ک همراه با `spec.tsx.*` هستند نیاز است تا یک فایل به نام `tsconfig.jest.json` بسازیم و کد های زیر را در آن قرار دهیم:
+```json title="tsconfig.jest.json"
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "jsx": "react-jsx"
+  }
+}
+```
+🎉 در واقع در اینجا ما تمامی تنظیمات `tsconfig.json` را صدا می زنیم و فقط `compilerOptions` را `rewrite` می کنیم.
+
+6. سپس نیاز است ک فایل `jest.config.ts` را نیز تغییر دهیم:
+
+[jest config](https://kulshekhar.github.io/ts-jest/docs/getting-started/options/tsconfig)
+
+🚩 بهتر است ک از لینک بالا `config` کپی شود، زیرا هربار کانفیگ به روز میشود. اما `testEnvironment` باید تغییر کند. زیرا ما ب یک محیط تحت مرورگر برای تست های `react` احتیاج داریم ک باید شامل `DOM` باشد(`jsdom`).
+```ts title="jest.config.ts"
+module.exports = {
+  // [...]
+  testEnvironment: 'jsdom', // برای اجرا شدن تست ها باید این قسمت را نیز تغییر دهیم
+  globals: {
+    'ts-jest': {
+      tsconfig: './tsconfig.jest.json'
+    }
+  }
+}
+```
+🚩 برای اینکه به اروری نخوریم، بهتر است ک فایل `jest.config` به صورت `js` باشد و برای اینکه `eslint` به فایل `js` گیر ندهد بخاطر استفاده از `typescript` به عنوان `parser`، بهتر است ک فایل `tsconfig.json` را کمی تغییر دهیم و فایل های `js` نیز در قسمت `include` قرار دهیم:
+```json
+{
+  "include": ["next-env.d.ts", "src", "**/*.ts", "**/*.tsx", "**/*.js"]
+}
+```
+
+🎉 برای اینکه توابعی مانند 2 تابع زیر را بتوان در تست ها استفاده کرد باید یک کانفیگ جدید را ب پروژه اضافه کرد، در واقع توسط این کانفیگ یک سری از کدهای تست ما قبل از اجرا شدن مابقی کد ها اجرا می شود و به ما اجازه این را میدهد ک از توابع زیر استفاده کنیم:
+```tsx
+import {render, screen} from "@testing-library/react";
+import { Hello } from "./Hello";
+
+it("rendres 'Hello world'", () => {
+    render(<Hello/>);
+    const myElem = screen.getByText("/hello world/i");
+    expect(myElem).toBeInTheDocument();
+})
+```
+7. حال باید برای اینکه از `dom` برای تست هایمان استفاده کنیم، باید پکیج مخصوص ب آن را برای `jest` نصب کنیم:
+```shell
+npm install -D jest-environment-jsdom
+````
+8. از آدرس زیر باید کانفیگ آن را برداریم و به `jest.config.js` اضافه کنیم:
+
+[jest-setupFilesAfterEnv](https://jestjs.io/docs/configuration#setupfilesafterenv-array)
+```ts
+module.exports = {
+  setupFilesAfterEnv: ['./setup.jest.ts']
+};
+```
+9. حال باید یک فایل دیگر ب نام `setup.jest.ts` را مسیر `src` یا مسیر `test` اضافه کنیم:
+```ts title="setup.jest.ts"
+import "@testing-library/jest-dom";
+```
+
+### eslint
+همچنین می توان از `eslint` نیز همراه با `jest` استفاده کرد ک خیلی در جلوگیری از باگ ها کمک می کند.
+
+1. برای اینکار باید ابتدا `eslint` خود پروژه را ( در صورت وجود ) نامش را عوض کنیم ( تا از محتوای آن در `eslint` جدید استفاده کنیم ) و سپس از دستور زیر استفاده میکنیم:
+```shell
+npx eslint --init
+```
+2. حال در فایل جدید از کد های زیر استفاده میکنیم:
+
+🎉 در واقع کد های `eslint.json`قبلی را برداشته و در قسمت `extends` فایل جدید قرار میدهیم و فایل قبلی را حذف می کنیم.
+```ts title=".eslintrc.json"
+module.exports = {
+    "extends": [
+        "eslint:recommended",
+        "plugin:react/recommended",
+        "plugin:@typescript-eslint/recommended",
+        "plugin:@typescript-eslint/recommended-requiring-type-checking", // add more strictness to type checking
+        "next",
+        "next/core-web-vitals",
+        "react-app/jest",
+        "plugin:testing-library/react",
+        "plugin:jest-dom/recommended"
+    ],
+    "parser": "@typescript-eslint/parser",
+    "parserOptions": {
+        "project": ["./tsconfig.json"], // Specify it only for TypeScript files
+        "ecmaFeatures": {
+            "jsx": true
+        },
+        "ecmaVersion": 13,
+        "sourceType": "module"
+    },
+    "rules": { // در این قسمت هر قانونی را می توانیم برای لینت قرار دهیم
+        "@typescript-eslint/explicit-module-boundary-types": "off", // برای غیر فعال سازی گیر دادن به تایپ های تمامی فانکشن ها
+        "@typescript-eslint/no-explicit-any": "off",
+        "@typescript-eslint/ban-ts-comment": "off",
+        "@typescript-eslint/no-var-requires": "off",
+        "@typescript-eslint/prefer-nullish-coalescing": "error",
+        "testing-library/no-render-in-setup": ["error", {"allowTestingFrameworkSetupHook": "beforeEach"}] // using 'render' inside 'beforeEach'
+    }
+};
+```
+🎉 در حالت کلی بهتر است بعد از `npx eslint --init` فقط موارد مورد نیاز را ب فایل `json` جدید اضافه کنیم.
+
+✨ ممکن است بعد نصب `eslint` و `jest` در `react` به اروری مبنی بر اینکه ورژن این 2 پکیج بالا تر از پکیج های نصب شده در این اپلیکیشن می باشد ک در آن صورت باید `package-lock.json` و `yarn.lock` و `node_modules` را حذف کنیم و هم چنین از `package.json` نیز باید نام این 2 پکیج را نیز حذف کنیم و دوباره `npm i` یا `yarn` بزنیم.
+
+همچنین چون ما فولدر اصلی `pages` در `next` را به `src` جابه جا کردیم، باید توسط دستور زیر ( فقط برای `next` ) مسیری ک `eslint` چک میکند را تغییر دهیم ( `package.json` ):
+```json
+{
+  "scripts": {
+    "lint": "next lint --dir src"
+  }
+}
+```
+🎉 در واقع در سایت خود `next` می توان فولدر هایی ک توسط `lint` چک می شوند را ببینیم:
+
+[Next Lint](https://nextjs.org/docs/basic-features/eslint#linting-custom-directories-and-files)
+
+3. حال باید پلاگین هایی ک نیاز داریم برای متصل کردن `eslint` و `jest` را نصب و آن را به فایل `eslintrc.json` در قسمت `extends`، اضافه کنیم:
+
+[eslint-plugin-jest](https://github.com/jest-community/eslint-plugin-jest#shareable-configurations)
+```shell
+yarn add eslint-plugin-jest -D
+```
+```js title=".eslintrc.json"
+module.exports = {
+    "extends": [
+        "eslint:recommended",
+        "plugin:react/recommended",
+        "plugin:@typescript-eslint/recommended",
+        "plugin:@typescript-eslint/recommended-requiring-type-checking",
+        + "plugin:jest/recommended",
+        + "plugin:jest/style", // adding prefer style like enforce using 'toBeNull' over toBe(null)
+        "next",
+        "next/core-web-vitals"
+    ]
+};
+```
+🎉 بعد از نصب این پلاگین ها خواهیم دید ک مثلا ب خالی بودن `explaination` تست ها یا استفاده از `fit` بجای `it` گیر میدهد.
+
+4. سپس باید پلاگینی ک مربوط به `testing library` می باشد را برای `eslint` نصب کنیم:
+```shell
+yarn add eslint-plugin-testing-library -D
+```
+[eslint-plugin-testing-library React](https://github.com/testing-library/eslint-plugin-testing-library#react)
+```js title=".eslintrc.json"
+module.exports = {
+    "extends": [
+        "eslint:recommended",
+        "plugin:react/recommended",
+        "plugin:@typescript-eslint/recommended",
+        "plugin:@typescript-eslint/recommended-requiring-type-checking",
+        "plugin:jest/recommended",
+        "plugin:jest/style",
+        + "plugin:testing-library/react",
+        "next",
+        "next/core-web-vitals"
+    ]
+};
+```
+🎉 بعد از استفاده از این پلاگین، اگر ما مثلا `()screen.debug` در کدهایمان باشد و `lint` را اجرا کنیم، ب آن گیر میدهد.
+
+5. حال برای اینکه با یک دستور کد هایی ک از قوانین `eslint` تبعیت نکرده اند را `fix` کنیم، می توان یک `script` جدید ب `package.json` اضافه کنیم ک با هر بار صدا زدن، تمامی `warning` ها را برطرف می کند:
+```json title="package.json"
+{
+  "scripts": {
+    "lint-fix": "next lint --fix"
+  }
+}
+```
+
+#### React
+برای اینکه در `react` نیز `eslint` را کانفیگ کنیم، باید ب صورت زیر عمل کنیم:
+
+1. اگر آن را نصب نداریم، ابتدا باید آن را نصب کنیم (برای اینکه مشخص کنیم ک ما فقط برای `react` می خواهیم، باید پلاگین آن را نیز نصب کنیم):
+```shell
+npm install -D eslint eslint-plugin-react
+```
+2. حال باید آن `initialize` کنیم:
+```shell
+eslint --init
+```
+در این بخش بر اساس نیاز، ب سوالات پاسخ میدهیم.
+
+3. حال موارد زیر را ب فایل کانفیگ اضافه کنیم:
+```json title=".eslintrc.json"
+{
+  "extends": [
+    "eslint:recommended",
+    "plugin:react/recommended"
+  ]
+}
+```
+4. حال موارد زیر را ب `package.json` اضافه می کنیم:
+```json
+{
+  "script": {
+    "lint": "eslint src --resolve-plugins-relative-to .",
+    "lint-fix": "eslint src --resolve-plugins-relative-to . --fix"
+  }
+}
+```
+
+### lint-staged, husky, prettier
+گاهی اوقات ما نیاز داریم ک کد های ما از نظر ساختاری، تمیز بشوند و اگر اروری دارد، هنگام کامیت کردن، ب ما نشان دهد، یعنی یک `script` قبل از `commit` اجرا می شود و مواردی ک ما ب آن گفته ایم را برای ما انجام می دهد
+
+[lint-staged installation](https://github.com/okonet/lint-staged#installation-and-setup)
+1. برای اینکار ما به 3 پکیج زیر نیاز داریم:
+```shell
+npm install lint-staged husky prettier -D
+```
+2. حال ابتدا باید کانفیگ های مربوط ب `husky` را انجام دهیم:
+  - ابتدا باید بعد از نصب آن، آنرا توسط یک دستور ک باید آن را در `package.json` قرار دهیم(توسط دستور اول به صورت خودکار در `package.json` قرار میگیرد)، اجرا کنیم(یکبار)
+```shell
+npm pkg set scripts.prepare="husky install"
+npm run prepare
+```
+  - حال باید توسط دستور زیر، دستوری ک میخواهیم قبل از `commit` اجرا شود را مشخص کنیم(در فایل `husky/pre-commit.` می توان آن را دستی تغییر داد):
+```shell
+npx husky add .husky/pre-commit "npm run lint-staged"
+```
+[Husky doc](https://github.com/typicode/husky#usage)
+
+3. حال می توان موارد دیگری را نیز برای `fix` کردن ارورهای `eslint` و اضافه کردن فایل های تغییر یافته ب `stage` گیت، دستور های زیر را نیز ب فایل `pre-commit` اضافه کرد:
+```text title=".husky/pre-commit"
+npm run lint-fix && git add . && npm run lint-staged
+```
+
+4. حال باید کانفیگ های مربوط به `lint-staged` را قرار دهیم:
+  - ابتدا توسط دستور زیر، `script` مربوطه را ب `package.json` اضافه میکنیم:
+```shell
+npm pkg set scripts.lint-staged="lint-staged"
+```
+[lint-staged doc](https://github.com/okonet/lint-staged#installation-and-setup)
+
+  - حال باید موارد زیر را در انتهای `package.json` قرار دهیم تا فایل هایی ک میخواهیم چک شوند و پکیج هایی کی میخواهیم قبل از `commit` اجرا شوند را مشخص می کنیم:
+```json
+{
+  "lint-staged": {
+    "**/*.(js|jsx|ts|tsx)": [
+      "eslint --cache --fix",
+      "prettier --write --ignore-unknown"
+    ]
+  }
+}
+```
+🚩 بهتر است ک `cache` های `eslint` را نیز ب فایل `gitignore.` اضافه کنیم:
+```gitignore
+# eslint
+.eslintcache
+```
+
+### coverage
+حال برای اینکه تست در حالت `ci` را نیز اضافه کنیم و میزان پوشش کدهای تست شده مان را ببینیم، باید از کد های زیر در `jest.config.js` استفاده کنیم
+
+[jest-coveragethreshold](https://jestjs.io/docs/configuration#coveragethreshold-object)
+```ts title="jest.config.ts"
+module.exports = {
+  //...
+  coverageThreshold: {
+    global: {
+      branches: 100, // percentage
+      functions: 100, // percentage
+      lines: 100, // percentage
+      statements: 100
+    }
+  }
+}
+```
+🎉 در واقع توسط این بخش، ما مشخص می کنیم ک باید 100% کد های ما تست داشته باشند، در غیر اینصورت، `jest` ارور می دهد.
+
+حال برای اینکه این قسمت هم ب درستی کار کند، باید در `package.json` دستور زیر را اضافه کنیم:
+```json
+{
+  "scripts": {
+    "test:ci": "jest --coverage --silent --ci",
+    "prepare": "husky install",
+    "lint-staged": "lint-staged"
+  }
+}
+```
+
+🎉🎉🎉 حتما باید تمام فایل ها ( اگر از `ts` استفاده می شود ) حتما با پسوند های `ts` و `tsx` باشد، حتی `eslint.`، `babel.config` و ...، زیرا ب ما ارور `parserOption` میدهد ک مربوط ب مغایرت داشتن فرمت فایل ها می باشد.
+
+🎉 تغییرات زیر نیز باید اعمال شود روی فایل های مورد نظر یا اگر وجود ندارد، باید ساخته شوند:
+
+`tsconfig.json`
+```json
+{
+"include": ["src", "./jest.config.ts", ".eslintrc", "./babel.config"]
+}
+```
+
+`tsconfig.eslint.json`
+```json
+{
+  "extends": "./tsconfig.json",
+  "include": ["babel.config"]
+}
+```
+
+### github action ( optional )
+حال میتوان وارد `repo` خود شویم و در قسمت `actions` یک `workflow` جدید برای `node` بسازیم
+
+سپس کد های درون آن را به کد های زیر تغییر دهیم:
+```yaml
+name: Node.js CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: "*"
+
+jobs:
+  build:
+
+    runs-on: ${{matrix.os}}
+
+    strategy:
+      matrix:
+        node-version: [14.x, 16.x, 18.x]
+        os: [ubuntu-latest, windows-latest, macos-latest]
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+    - run: npm ci
+    - run: npm run lint
+    - run: npm run lint-fix
+    - run: npm run test:ci
+```
+حال میتوان کد هایمان را به `repo` مورد نظرمان `push` کنیم.
+
+🎉 اگر در حالت کلی به اروری در مورد `npm` خوردیم، می توان از این خط کد، بالای `run: npm ci -` استفاده کنیم:
+```yaml
+- run: npm i -g npm@latest # این خط کد را اگر ب ارور خوردیم در حالت عادی، اضافه میکنیم
+```

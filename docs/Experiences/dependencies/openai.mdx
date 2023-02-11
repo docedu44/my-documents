@@ -1,0 +1,90 @@
+
+
+## Install
+برای استفاده از `Open AI` در `node` می توان ب صورت زیر از `API` های آن استفاده کنیم:
+1. نصب وابستگی ها
+```shell
+npm install cors dotenv express nodemon openai
+```
+- در واقع از `cors` برای ارسال داده در سطح اینترنت (Cross Origin) استفاده می شود.
+- پکیج `dotenv` برای استفاده و امن نگه داشتن متغییر های محیطی `Environment Variables` استفاده می شود.
+- از `nodemon` هم برای در حال اجرا نگه داشتن سرورمان استفاده میکنیم.
+
+2. حال می توان در فولدر بکندمان، یک فایل `server.js` بسازیم
+3. اما قبل از آن باید یک `API Key` در سایت `Open AI` بسازیم
+
+[Open AI - API](https://openai.com/api/)
+
+4. ابتدا باید ثبت نام کنیم و سپس بر روی عکس پروفایلمان کلیک کرده و وارد قسمت `API Key` می شویم.
+5. حال یک `API Key` می سازیم و آن را کپی میکنیم.
+6. حال در فولدر `server`، یک فایل `env.` می سازیم و ب صورت زیر، `API Key` کپی شده را قرار می دهیم:
+```shell
+OPENAI_API_KEY="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"
+```
+7. حال در فایل `server.js` ب صورت زیر، کافیگ های مربوطه را انجام می دهیم:
+```js title="server/index.js"
+import express from "express";
+import * as dotenv from "dotenv";
+import cors from "cors";
+import {Configuration, OpenAIApi} from "openai";
+
+const PORT = 5000 || 6000;
+
+dotenv.config();
+
+const configuration = new Configuration({
+    apiKey: process.env.OPENAI_API_KEY
+});
+
+const openai = new OpenAIApi(configuration);
+
+const app = express();
+app.use(cors()); //? This going to allow us to call the server from Frontend
+app.use(express.json()); //? This is going to allow us to pass json from Frontend to Backend
+
+app.get("/", async (req, res) => {
+    res.status(200).send({
+        message: "Hello from CodeX"
+    });
+});
+
+app.post("/", async (req, res) => {
+    try {
+        const prompt = req.body.prompt;
+        const response = await openai.createCompletion({
+            model: "text-davinci-003",
+            prompt: `${prompt}`,
+            temperature: 0, //? fewer = better
+            max_tokens: 3000, //? Length of text
+            top_p: 1,
+            frequency_penalty: 0.5, //? Rate of repeat sentences when you ask it a similar question
+            presence_penalty: 0
+        });
+        res.status(200).send({
+            bot: response.data.choices[0].text;
+        });
+    } catch (error) {
+        console.log(error);
+        res.status(500).send({error});
+    }
+});
+
+app.listen(PORT, () => console.log(`Server is running on http://localhost:${PORT}`));
+```
+🚩 در واقع موارد داخل `createCompletion` را می توان از لینک زیر و در قسمت مثال ها پیدا کرد:
+
+[Open AI Example](https://beta.openai.com/examples)
+
+- نوع `API` مورد نظر را انتخاب می کنیم و سپس وارد قسمت `Playground` می شویم
+- حال می توان از سمت راست، موارد مورد نیاز را تغییر دهیم و سپس روی دکمه `View code` میزنیم و کد های مربوط ب `node` را کپی میکنیم.
+
+8. حال می توان وارد `package.json` شده و `"start": "nodemon server.js"` را به `scripts` اضافه کنیم.
+9. برای اینکه جاوا اسکریپت، متوجه `import` شود و دیگر نیازی ب استفاده از `require` نباشد، داخل `package.json` مقدار زیر را اضافه میکنیم:
+```json
+{
+  "type": "module",
+  "scripts": {
+    "start": "nodemon index.js"
+  }
+}
+```

@@ -1,0 +1,207 @@
+---
+id: astro
+title: Astro
+---
+یکی از `framework` های فرانت است ک می توان درون آن از چندین `framework` دیگر ب صورت همزمان استفاده کرد (ب این ساختار `island` می گوید)، مثل `Vue`و `React`و `Svelte`و `Alpine` و `MD`
+```shell
+pnpm create astro@latest
+
+npm create astro@latest
+```
+[Astro](https://astro.build/)
+
+### Use
+1. برای استفاده می توان ب صورت زیر عمل کرد:
+```astro title="src/components/Panel.astro"
+---
+import "./Panel.scss";
+export interface Props {
+  title: string;
+  icon?: string;
+}
+
+const { title, icon } = Astro.props;
+---
+
+<div class="center">
+  <h1>{title} {icon}</h1>
+  <slot />
+</div>
+```
+- در واقع درون بلاک `---` می توان کد های `js` یا `ts` نوشت.
+- همچنین `Astro.props` مقداریست ک از والد ب کامپوننت فرزند فرستاده می شود.
+- در واقع `slot` مقادیر داخل تگ باز و بسته کامپوننت `Panel` در کامپوننت والد را نمایش می دهد.
+```astron title="src/pages/index.astro"
+---
+import HelloReact from "../components/HelloReact";
+import Panel from "../components/Panel.astro";
+import Layout from "../layouts/Layout.astro";
+---
+
+<Layout title="Welcome to Astro.">
+  <main>
+    <Panel title="Mohammad" icon="😊">
+      <div>I am God!</div>
+    </Panel>
+  </main>
+</Layout>
+<style></style>
+```
+- همچنین می توان از تگ `style` نیز برای استایل دهی استفاده کرد.
+### React
+برای اضافه کردن `React` و استفاده از آن باید ب صورت زیر عمل کرد:
+```shell
+pnpx astro add react@latest
+
+npx astro add react@latest
+```
+حال می توان از `react` ب صورت زیر استفاده کرد:
+```tsx title="src/components/HelloReact.tsx"
+import { useState } from "react";
+
+const HelloReact = () => {
+  const [counter, setCounter] = useState<number>(0);
+
+  return (
+    <div>
+      <button onClick={() => setCounter((preState) => preState +1)}>
+        {counter}
+      </button>
+    </div>
+  );
+};
+
+export default HelloReact;
+```
+حال می توان آن را ب `index.astro` اضافه کرد:
+```astro
+  <main>
+    <Panel title="Mamad" icon="😊">
+      <div>I am God!</div>
+    </Panel>
+    <h1>React</h1>
+    <HelloReact client:load/>
+  </main>
+```
+🚩 چون `astro` بدون جاوااسکریپت اجرا می شود، بدون قرار دادن `client:load`، دکمه ما کار نمی کند، پس برای کامپوننت هایی ک نیاز است یک `event` را اجرا کنند، نیاز است ک از `client:load` استفاده کنیم.
+
+🚩 بعد از `build` شدن پروژه، هنگام لود شدن برنامه، کامپوونت `HelloReact` ب صورت خودکار لود می شود، بر خلاف `client:visible`
+
+#### client.visible
+حال اگر بخواهیم ک بعد از `build` کردن پروژه، فقط هنگامی ک کامپوننت مورد نظرمان در صفحه ظاهر شد یا `visible` شد، کامپوننت لود شود، می توان ب صورت زیر عمل کرد:
+```astro
+  <main>
+    <Panel title="Mamad" icon="😊">
+      <div>I am God!</div>
+    </Panel>
+    <h1>React</h1>
+    <!-- <HelloReact client:load/> -->
+	  <br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/>
+    <HelloReact client:visible/>
+  </main>
+```
+
+### Vue
+برای اضافه کردن `Vue` و استفاده از آن باید ب صورت زیر عمل کرد:
+```shell
+pnpx astro add vue@latest
+
+npx astro add vue@latest
+```
+حال می توان از `Vue` ب صورت زیر استفاده کرد:
+```vue title="src/components/HelloVue.vue"
+<template>
+  <div>
+    <button @click="increment">{{ value }}</button>
+  </div>
+</template>
+
+<script lang="ts">
+import { defineComponent } from 'vue';
+
+export default defineComponent({
+  name: "hello",
+  data() {
+    return {
+      value: 0,
+    };
+  },
+  methods: {
+    increment() {
+      this.value += 1;
+    },
+  },
+});
+</script>
+```
+حال می توان آن را ب `index.astro` اضافه کرد:
+```astro
+  <main>
+    <Panel title="Mamad" icon="😊">
+      <div>I am God!</div>
+    </Panel>
+    <h1>Vue</h1>
+    <HelloVue client:visible/>
+  </main>
+```
+مابقی موارد نیز دقیقا مثل `react` می باشد.
+
+### Svelte
+برای اضافه کردن `Svelte` و استفاده از آن باید ب صورت زیر عمل کرد:
+```shell
+pnpx astro add svelte@latest
+
+npx astro add svelte@latest
+```
+حال می توان از `Svelte` ب صورت زیر استفاده کرد:
+```svelte title="src/components/HelloSvelte.svelte"
+<script>
+  let count = 0;
+  const handleClick = () => {
+    count += 1;
+  };
+</script>
+
+<button on:click={handleClick}>{count}</button>
+```
+حال می توان آن را ب `index.astro` اضافه کرد:
+```astro
+  <main>
+    <Panel title="Mamad" icon="😊">
+      <div>I am God!</div>
+    </Panel>
+	  <h1>Svelte</h1>
+	  <HelloSvelte client:load/>
+  </main>
+```
+
+### MDX
+برای اضافه کردن `MDX` و استفاده از آن باید ب صورت زیر عمل کرد:
+```shell
+pnpx astro add mdx@latest
+
+npx astro add mdx@latest
+```
+حال می توان از `MDX` ب صورت زیر استفاده کرد:
+```mdx title="src/components/HelloMdx.mdx"
+### Hello MDX
+I installed with **command** _bellow_ 😊👍
+
+\```shell
+npx astro add mdx
+\```
+```
+حال می توان آن را ب `index.astro` اضافه کرد:
+```astro
+  <main>
+    <Panel title="Mamad" icon="😊">
+      <div>I am God!</div>
+    </Panel>
+	  <h1>MDX</h1>
+	  <HelloMdx/>
+  </main>
+```
+
+### Tips
+1. در حالت کلی نمی توان تابع را ب صورت مستقیم ب کامپوننت ها پاس داد.
+2. بعد از نصب هر `framework` اگر از کلمه `latest@` استفاده می کنیم، باید وارد فایل `astro.config.mjs` شویم و آن کلمه را از `import` ها حذف کنیم.

@@ -73,6 +73,14 @@ body {
 ```
 حال از این کلاس ها در `html` استفاده می کنیم.
 
+### BEM
+ساختار برای نام گذاری کلاس ها می باشد ک مخفف `Block Element Modifier` می باشد و به صورت زیر است :
+
+![BEM](/img/bem-naming-structure.svg) ![BEM](/img/bem-naming-structure-2.png) ![BEM](/img/bem-naming-structure-3.png)
+
+### Tips
+1. در واقع `()is:` و `()where:` شبیه ب هم هستند، با این فرق ک `()where:` سلکتور ضعیف تری نسبت ب `()is:` می باشد.
+
 ## SCSS
 ### Install
 برای نصب `sass` باید از کد زیر استفاده کرد:
@@ -101,5 +109,20 @@ body {
         --primary: #{$secondary-dark};
         --secondary: #{$primary-dark};
     }
+}
+```
+
+
+### Tips
+1. هرگاه بخواهیم یک کلاس ترکیبی را ک صورت توو در توو نوشته شده است را در یکجای دیگر `extend` کنیم، باید به صورت زیر عمل کنیم:
+```scss
+%message-info, .message.info {
+  border: 1px solid black;
+  font-size: 1.5rem;
+}
+
+.heads-up {
+  // Instead of `.message.info`.
+  @extend %message-info;
 }
 ```

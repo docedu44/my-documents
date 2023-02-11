@@ -65,6 +65,8 @@ nvm off # روشن کردن مدیریت کننده نود ها
 nvm use [version] # استفاده از ورژنی ک میخواهیم
 
 nvm arch # نمایش اینکه نسخه 64 نصب است یا 32
+
+nvm alias default 14.16.x # تغییر پیش فرض ورژنی ک استفاده می کنیم
 ```
 
 ## formik
@@ -151,3 +153,15 @@ export const CustomFormField = ({ name, ...props }) => {
     </>
   );};
 ```
+
+
+## http-server
+یک پکیج عالی برای `serve` کردن یک فایل روی یک پورت خاص:
+```shell
+http-server [path] [options]
+```
+مثلا برای `serve` کردن فایل های `build` شده یک `framework` روی سیستممان
+```shell
+http-server dist -p 7000
+```
+[http server](https://www.npmjs.com/package/http-server)

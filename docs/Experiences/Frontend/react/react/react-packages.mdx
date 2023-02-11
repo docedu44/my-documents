@@ -1,0 +1,164 @@
+---
+title: packages
+---
+## React Router
+برای نصب روتر باید از دستور زیر استفاده کنیم:
+```shell
+yarn add react-router-dom
+```
+حال باید در `index.js` از آن استفاده کنیم:
+```jsx
+ReactDOM.render(
+  <BrowserRouter>
+    <App />
+  </BrowserRouter>,
+  document.getElementById("root")
+);
+```
+حال می توان همه جای برنامه از `Routes` استفاده کنیم
+```jsx
+  <Routes>
+    <Route path="/" element={<Navigate to={"/contacts"}/>}/>
+    <Route path="/contacts" element={<Contacts contacts={contacts} loading={loading}/>}/>
+  </Routes>
+```
+🎉 فرق `Link` و `NavLink` در این است ک می توان ب `NavLink` ها حالت اکتیو و دی اکتیو بدهیم و بر اساس `route` رنگ آن را مثلا تغییر دهیم و هوشمندتر است.
+### OutLet & useOutletContext
+بعضی مواقع نیاز داریم ک یک مقداری را از کامپوننت والد، ب کامپوننت فرزند بدهیم و این کامپوننت فرزند نیز خودش یکی از `route` ها می باشد ک در قسمت `Routes` تعریف شده است و ما ب آن دسترسی نداریم، در این حالت می توان یک `context` ساخت و مقدار را پاس داد یا از خود `context` مربوط ب `react router` استفاده کنیم:
+```tsx title="App.tsx"
+  <Routes>
+    <Route path="/login" element={<Login/>}/>
+    <Route path="/" element={<Home/>}>
+      <Route path="/user-profile/:userId" element={<UserProfile/>}/>
+      <Route path="/*" element={<Pins/>}/>
+    </Route>
+  </Routes>
+```
+```tsx title="src/view/Home.tsx"
+export const useUser = () => {
+    return useOutletContext<{user: any}>();
+}
+const Home = () => {
+  const [user, setUser] = useState<any>({userName: 'Mohammad'});
+  return (
+    <div className="pb-2 flex-1 h-screen overflow-y-scroll">
+        <Outlet context={{user}}/>
+    </div>
+  )
+}
+```
+```tsx title="src/view/Pins.tsx"
+const Pins = () => {
+  const {user} = useUser();
+
+  return (
+      <div>{user.userName}</div>
+  )
+};
+```
+
+## Google Auth
+توسط این پکیج می توان از `authentication` گوگل در فرانت استفاده کرد:
+```shell
+npm install react-google-login --legacy-peer-deps
+```
+همچنین برای استفاده از این پکیج باید یک پکیج دیگر نیز نصب شود، ک برای `initialize` کردن حساب گوگلمان استفاده می شود:
+```shell
+npm install gapi-script
+```
+🚩 این پکیج در مارچ 2023 منقضی می شود، بعد از این تایم، باید از یک پکیج دیگر استفاده کرد.
+### Google Client ID
+برای استفاده از لاگین گوگل، باید ابتدا یک اکانت در `Google Cloud` داشته باشیم، سپس وارد قسمت `developers` می شویم و سپس به صورت زیر برای گرفتن `clientId` اقدام می کنیم:
+
+1. ابتدا یک پروژه با نام دلخواه می سازیم و سپس وارد آن می شویم.
+2. حال از منوی کنار، گزینه `APIs and services` را میزنیم.
+3. سپس از منوی سمت راست، گزینه `Credentials` را می زنیم.
+4. سپس دکمه `Create Credentials` را زده و سپس گزینه `OAuth client ID` را میزنیم.
+5. حال دکمه آبی را زده و سپس گزینه `External` را انتخاب کرده و سپس `Create` را میزنیم.
+6. حال باید یک نام برای `app` مان قرار دهیم و سپس گزینه های ستاره دار را باید پر کنیم (معمولا ایمیل ساپورت و ایمیل اصلی را فقط می خواهد.) و 2-3 مرحله بعد را بدون تغییر، تایید میکنیم.
+7. حال موارد 3 و 4 را دوباره انجام می دهیم و در صفحه باز شده، نوع `app` را مشخص میکنیم و سپس یک نام برای آن تعیین می کنیم.
+8. حال در قسمت `Authorised JavaScript origins` باید `URL` هایی ک اجازه استفاده از این `Client ID` را دارند، وارد میکنیم و `Create` را بزنیم.
+9. حال می توان `Client ID` یا `Client Secret` را برداشته و استفاده کنیم.
+
+[Google Client ID](https://blog.logrocket.com/guide-adding-google-login-react-app/)
+
+[Google Client ID - React & Node](https://www.sitepoint.com/google-auth-react-express/)
+
+🎉 اگر ب صورت لوکال استفاده میکنیم، کافیست به صورت زیر عمل کنیم:
+```text
+http://localhost:[port]
+```
+#### Sanity & Google Auth
+برای استفاده از این 2 می توان ب صورت زیر عمل کرد:
+```tsx
+import {useEffect} from "react";
+import GoogleLogin from "react-google-login";
+import {gapi} from "gapi-script";
+import {client} from "../client";
+
+export const Login = () => {
+    const navigate = useNavigate();
+    const responseGoogle = async (res: any) => {
+        localStorage.setItem("user", JSON.stringify(res.profileObj));
+        const {name, googleId, imageUrl} = res.profileObj;
+
+        const doc = {
+            _id: googleId,
+            _type: "user", //? schema name in sanity
+            userName: name, //? property of schemas/user.ts in sanity
+            image: imageUrl //? property of schemas/user.ts in sanity
+        };
+        await client.createIfNotExists(doc); //? create this document, if is not exist
+        navigate("/", {replace: true});
+    }
+
+    useEffect(() => {
+        //! calling gapi to connect to Google for initializing
+        function start() {
+            gapi.client.init({
+                clientId: process.env.REACT_APP_GOOGLE_API_TOKEN,
+                scope: 'email',
+            });
+        }
+        gapi.load('client:auth2', start);
+    }, []);
+
+    return (
+        <div className="shadow-2xl w-190">
+          <GoogleLogin
+            clientId={process.env.REACT_APP_GOOGLE_API_TOKEN as string}
+            onSuccess={responseGoogle}
+            onFailure={responseGoogle}
+            cookiePolicy="single_host_origin"
+            render={(renderProps) => (
+              <button onClick={() => renderProps.onClick()} disabled={renderProps.disabled}
+                type="button"
+                className="bg-mainColor flex justify-center items-center py-2 px-3 rounded-md mt-1 cursor-pointer outline-none text-sm w-full">
+                  <FcGoogle className="text-xl "/><span className="mx-auto">Sign in with Google</span>
+              </button>
+            )}
+          />
+        </div>
+    )
+};
+```
+🎉 در واقع `client` در این قسمت توضیح داده شده است:
+[Sanity - Client](/my-documents/docs/Experiences/dependencies/sanity#client)
+
+## small packages
+1. پکیجی برای ساخت `ID` های رندوم
+```shell
+npm install -D uuid
+```
+2. برای ساخت یک گالری با عکس هایی با اندازه های مختلف مناسب است:
+```shell
+npm install react-masonry-css
+```
+3. برای استفاده از لودینگ های مختلف قابل استفاده است
+```shell
+npm install react-loader-spinner
+```
+4. برای استفاده از آیکون های مختلف مناسب است:
+```shell
+npm install react-icons
+```

@@ -1,0 +1,231 @@
+---
+title: Hooks
+---
+## react-router-dom
+
+### useSearchParams & useLocation
+`useSearchParams:`
+یکی از هوک های پرکاربرد برای استفاده از `url` برای جستجو می باشد دقیقا مانند `useState` می باشد، با این فرق ک فقط در `url` مقدار را ذخیره و بازیابی می کند.
+
+`useLocation:`
+توسط این هوک می توان به مسیر `url` و `query` ها و بقیه موارد دسترسی داشت.
+```jsx
+import {getBooks} from "../data"; // fake data
+import {NavLink, useSearchParams, useLocation} from "react-router-dom";
+
+export const Books = () => {
+    const books = getBooks();
+    const [searchParams, setSearchParams] = useSearchParams();
+    const location = useLocation();
+
+    const handleSearchParams = (e) => {
+        let filter = e.target.value;
+        filter ? setSearchParams({filter: filter}) : setSearchParams({});
+    };
+
+    const filteredBooks = books.filter(book => {
+        let filter = searchParams.get("filter");
+        if (!filter) return true;
+        let name = book.name.toLowerCase();
+        return name.startsWith(filter.toLowerCase());
+    });
+
+    return (
+            <nav>
+                <input type="text" value={searchParams.get("filter") || ""} onChange={handleSearchParams} placeholder="Search book..."/>
+                {filteredBooks.map(book => (
+                    <NavLink to={`/books/${book.number}${location.search}`} key={book.number} style={({isActive}) => { // می توان ب این صورت هنگام کلیک روی هر لینک، ب آن یک استایل خاص بدهیم
+                        return { display: "block", color: isActive && "red" }
+                    }}>{book.name}</NavLink>
+                ))}
+            </nav>)}
+```
+### useNavigate
+از این هوک می توان جابه جا کردن یوزر بعد از یک عملیات خاص استفاده کرد.
+```jsx
+import {useNavigate} from "react-router-dom";
+
+export const App = () => {
+const navigate = useNavigate();
+  return <button onClick={() => navigate("/")}>click</button>
+}
+```
+
+### useReducer
+دقیقا مانند `useState` می باشد با این فرق ک موقعی از این هوک استفاده می کنیم ک بخواهیم چند `state` ک بهم مربوط هستند را مدیریت کنیم.
+
+همچنین این هوک ب ما یک `function` می دهد ک میتوان از آن برای انجام یک سری کار های پیچیده استفاده کرد و بعد از آن، `state` هایمان را آپدیت کنیم.(بیشتر برای `state` های پیچیده و بهم مرتبط استفاده می شود.)
+
+```tsx
+import {useReducer} from "react";
+import "./Input.css";
+
+const inputReducer = (state: any, action: any) => { //* We can write it inside the component too
+    switch (action.type) {
+        case "CHANGE":
+            return {
+                ...state, // Make a copy of old values
+                value: action.payload,
+                isValid: true
+            };
+        default:
+            return state
+    }
+}
+const Input = (props: any) => {
+
+    //* first parameter is the value which is returned from the inputReducer and dispatch is a func to execute the action
+    const [inputState, dispatch] = useReducer(inputReducer, {value: "", isValid: false}); // second parameter is initial value
+
+    const changeHandler = (e: any) => {
+        dispatch({type: "CHANGE", payload: e.target.value})
+    }
+
+    const element = props.element === "input" ?
+        <input id={props.id} type={props.type} placeholder={props.placeholder} onChange={changeHandler}
+               value={inputState.value}/> :
+        <textarea id={props.id} rows={props.rows || 3} onChange={changeHandler} value={inputState.value}/>
+
+    return (
+        <div className={`form-control ${!inputState.isValid && "form-control--invalid"}`}>
+            <label htmlFor={props.id}>{props.label}</label>
+            {element}
+            {!inputState.isValid && <p>{props.errorText}</p>}
+        </div>
+    )
+};
+
+export default Input;
+```
+
+### useCallback
+هرگاه درون کامپوننت فرزند، یک تابعی را ک در کامپوننت والد می باشد رو صدا زدیم، باید آن تابع ک در کامپوننت والد می باشد را در `useCallback` استفاده کنیم.
+زیرا با صدا زدن تابع در کامپوننت فرزند، باعث رندر دوباره کامپوننت والد می شویم و با اینکار، ما دوباره آن تابع ک در کامپوننت والد می باشد را دوباره صدا میزنیم ک برای جلوگیری از اینکار، از این هوک استفاده میکنیم.
+```tsx
+export const NewPlace = () => {
+      const titleInputHandler = useCallback((id: any, value: any, isValid: boolean) => {}, []);
+      return ()
+}
+```
+در واقع برای اولین بار ک تابع درون کامپوننت والد اجرا میشود، `react` آن را ذخیره می کند و برای رندر های بعدی، تابع را دوباره رندر نمی کند. و `dependency` های این هوک نیز برای مشخص کردن این است ک این تابع هنگام تغییر کدام متغییر ها باید دوباره رندر شود.
+
+🎉 در حالت کلی توابعی ک می دانیم باعث رندر مجدد می شوند را بهتر است در `useCallback` قرار دهیم.
+
+### useMemo
+این هوک هم مانند `useCallback` می باشد، با این فرق ک از این تابع هوک برای متغییر ها استفاده می کنیم (مثلا آبجک ها) و هنگام ارسال ب کامپوننت فرزند، می توان از رندر دوباره کامپوننت فرزند هنگام تغییر نکردن این متغییر، جلوگیری کنیم.
+
+### useEffect
+توسط این هوک می توان هنگام اجرا شدن کامپوننت کار هایی ک مدنظرمان هست، قبل از لود صفحه انجام بدهیم و میتوان چندین بار در هر کامپوننت آن را صدا زد.
+
+🎉 هرگاه مقداری را ب صورت `props` گرفتیم یا میدانستیم ک یک مقدار امکان دارد در صفحه تغییر کند و بر اساس آن صفحه باید رندر دوباره شود، در قسمت `dependencies` های `useEffect` باید آن را قرار دهیم.
+
+### Custom Hooks
+می توان به راحتی در `react` یک کاستوم هوک با پیشوند `use` ساخت و از آن استفاده کرد:
+```tsx
+import {useCallback, useReducer} from "react";
+const formReducer = (state: any, action: any) => {
+    switch (action.type) {
+        case "INPUT_CHANGE":
+            let formIsValid = true;
+            for (const inputId in state.inputs) {
+                if (!state.inputs[inputId]) { // وجود داشت، آن را نادیده بگیرد و به سراغ مقدار بعدی برود و ادامه ندهد falsy توسط این شرط ما مشخص می کنیم ک اگر درون لوپ ما، مقدار غلط یا
+                    continue;
+                };
+                if (inputId === action.inputId) {
+                    formIsValid = formIsValid && action.isValid;
+                } else {
+                    formIsValid = formIsValid && state.inputs[inputId].isValid;
+                }
+            }
+            return {
+                ...state,
+                inputs: {
+                    ...state.inputs,
+                    [action.inputId]: {value: action.value, isValid: action.isValid}
+                },
+                isValid: formIsValid
+            };
+        default:
+            return state;
+    }
+}
+export const useForm = (initialInputs: any, initialFormValidity: boolean) => {
+    const [formState, dispatch] = useReducer(formReducer, {
+        inputs: initialInputs,
+        isValid: initialFormValidity
+    });
+
+    const inputHandler = useCallback((id: any, value: any, isValid: boolean) => {
+        dispatch({type: "INPUT_CHANGE", value, isValid, inputId: id})
+    }, [dispatch]);
+
+    return [formState, inputHandler]
+}
+```
+در واقع توسط خط آخر می توان مواردی ک نیاز داریم را `return` کنیم و در کامپوننت مورد نظر توسط `Array destracturing` از آن استفاده کنیم:
+```tsx
+ const [formState, inputHandler] = useForm({
+            title: {
+                value: "",
+                isValid: false
+            },
+            description: {
+                value: "",
+                isValid: false
+            },
+        }, false);
+```
+
+🎉 همچنین می توان به صورت زیر همزمان از `context` و `custom hook` و `useReducer` استفاده کرد ک بسیار کاربردی می باشد:
+```tsx
+import React, {createContext, FC, useCallback, useContext, useReducer} from "react";
+
+const OrderContext = createContext<any>(null);
+
+export const useOrder = () => {
+    const orderContext = useContext(OrderContext);
+
+    if (!orderContext) throw new Error("Something went wrong!");
+
+    return orderContext;
+};
+
+const initialState = {
+    orderStatus: "",
+    orderNumber: 0
+};
+
+const orderReducer = (state: typeof initialState, action: any) => {
+    switch (action.type) {
+        case "COMPLETE":
+            return {...state, orderNumber: action.payload, orderStatus: "complete"};
+        case "LOADING":
+            return {...state, orderStatus: "loading"};
+        case "FAILED":
+            return {...state, orderStatus: "failed", orderNumber: 0};
+        case "RESET":
+            return {...state, orderStatus: "", orderNumber: 0};
+        default:
+            return state;
+    }
+};
+
+const OrderProvider:FC<any> = ({children}) => {
+
+    const [state, dispatch] = useReducer(orderReducer, initialState);
+
+    const value = {
+        state,
+        orderStatusHandler: useCallback((type: string, payload: string | number) => {
+            dispatch({type, payload});
+        }, [dispatch])
+    };
+    return <OrderContext.Provider value={value}>{children}</OrderContext.Provider>;
+};
+
+export default OrderProvider;
+```
+- همچنین می توان `value` را ب صورت یک `array` نوشت
+- در اینجا `state` یک آبجکت از مقادیر `initialState` می باشد.
+- حال باید کامپوننت هایی ک مدنظرمان است را درون `OrderProvider` قرار دهیم.
+- هرجا نیاز ب مقادیر `value` بود نیز می توان از `useOrder` استفاده کرد.

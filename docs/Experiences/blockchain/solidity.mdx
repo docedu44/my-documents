@@ -1,0 +1,495 @@
+---
+id: solidity
+title: Solidity
+---
+# Solidity
+
+## hardhat
+در واقع این پکیج یک `Etherium development environment` است ک ب ما در اجرای تسک ها و وصل شدن ب `smart contract` ها کمک می کند.
+
+### Install
+1. نصب `hardhat`
+```shell
+npm install --save-dev hardhat
+```
+[Hardhat](https://hardhat.org/hardhat-runner/docs/getting-started#installation)
+
+2. حال باید آن را `initialize` کنیم:
+```shell
+npx hardhat
+```
+🚩 اگر از `ts` استفاده می کنیم باید گزینه استفاده از `typescript` را انتخاب کنیم اما قبل از آن باید موارد زیر را حذف کنیم:
+
+- فایل های `README.md`، `tsconfig`، فولدر `test` و سپس دستور بالا را یکبار دیگه ران می کنیم.
+
+🎉 حال می توان طبق روال `README.md` پیش رفت و یا ب صورت زیر عمل کنیم:
+
+3. دستور زیر را اجرا میکنیم:
+```shell
+npx hardhat test
+```
+- حال از ما می خواهد ک پکیج های زیر نصب کنیم:
+```shell
+npm i -D ts-node
+```
+🎉 اگر از `ts` استفاده میکنیم.
+
+- سپس پکیج مربوط ب `hardhat` را باید نصب کنیم:
+```shell
+npm install --save-dev @nomicfoundation/hardhat-toolbox
+```
+4. حال دوباره دستور زیر را اجرا می کنیم:
+```shell
+npx hardhat test
+```
+
+### How to use
+برای استفاده از `hardhat` و `solidity` می توان به صورت زیر عمل کرد:
+
+1. ابتدا در فولدر اصلی پروژه، یک فولدر ب نام `contracts` میسازیم، ک در واقع در اینجا همان بکند ما می باشد.
+2. حال برای مثال ب صورت زیر یک فایل با نام `Dappazon.sol` می سازیم و کد هایمان را درون آن قرار می دهیم:
+```solidity
+// SPDX-License-Identifier: UNLICENSED
+pragma solidity ^0.8.17;
+
+contract Dappazon {
+    string public name;
+    address public owner;
+
+    constructor() {
+        name = "Dappazon";
+        owner = msg.sender;
+    }
+}
+```
+- اگر ب صورت `open source` یک پروژه را می نویسیم، لازم است ک خط اول رو اول تمامی فایل های `contract` مان بنویسیم.
+- خط دوم نیز برای تمامی فایل های `sol` لازم است و باید حتما ورژن `solidity` مورد نظر را مشخص کنیم.
+- حتما در انتهای هر خط از کد باید `;` بزاریم.
+- حتما باید برای تمامی متغییر ها، `type` مشخص کنیم.
+- بهتر است ک نوع `public` یا `private` بودن مقادیر را مشخص کنیم.
+##### address
+در واقع نوع داده `address` همان آدرس `blockchain` است.(همان آدرس `wallet`مان در مثلا `metamask`)
+- در واقع `owner` همان کسی است ک این `smart contract` را در `blockchain` قرار داده است و `msg.sender` در واقع آدرس کیف پول آن شخص می باشد.
+
+#### function
+برای تعریف یک تابع در `solidity` می توان ب صورت زیر عمل کرد:
+```solidity
+contract Dappazon {
+    address public owner;
+
+    struct Item {
+        uint256 id;
+        string name;
+        string category;
+        string image;
+        uint256 cost;
+        uint256 rating;
+        uint256 stock;
+    }
+
+    struct Order {
+        uint256 time;
+        Item item;
+    }
+
+    mapping(uint256 => Item) public items;
+    mapping(address => uint256) public orderCount;
+    mapping(address => mapping(uint256 => Order)) public orders;
+
+    event List(string name, uint256 cost, uint256 quantity);
+    event Buy(address buyer, uint256 orderId, uint256 itemId);
+
+    modifier onlyOwner() {
+        require(msg.sender == owner);
+        _;
+    }
+
+    constructor() {
+        owner = msg.sender;
+    }
+
+    function list(
+        uint256 _id,
+        string memory _name,
+        string memory _category,
+        string memory _image,
+        uint256 _cost,
+        uint256 _rating,
+        uint256 _stock
+    ) public onlyOwner {
+
+        //? Create Item struct
+        Item memory item = Item(_id, _name, _category, _image, _cost, _rating, _stock);
+
+        //? Save Item struct to blockchain
+        items[_id] = item;
+
+        //? Emit an event
+        emit List(_name, _cost, _stock);
+    }
+
+    //? Buy products
+    function buy(uint256 _id) public payable {
+        //? Fetch item
+        Item memory item = items[_id];
+
+        //? Require enough ether to buy item
+        require(msg.value >= item.cost);
+
+        //? Require item is in stock
+        require(item.stock > 0);
+
+        //? Create an order
+        Order memory order = Order(block.timestamp, item);
+
+        //? Add order for user
+        // orderCount[msg.sender] = orderCount[msg.sender] + 1;
+        orderCount[msg.sender]++; // <-- Order ID
+        orders[msg.sender][orderCount[msg.sender]] = order;
+
+        //? Sub track stock
+         items[_id].stock = item.stock - 1;
+        // items[_id].stock--;
+
+        //? Emit event
+        emit Buy(msg.sender, orderCount[msg.sender], item.id);
+    }
+
+    //? Withdraw funds
+    function withdraw() public onlyOwner {
+        (bool success,) = owner.call{value : address(this).balance}("");
+        require(success);
+    }
+}
+```
+🎉 نامگذاری آرگومان های ورودی یک تابع در `solidity` ب این گونه است ک ابتدای هر نام باید یک `_` قرار گیرد.
+##### uint256
+در واقع `uint256` یک عدد طبیعی (0 و اعداد مثبت) و ب اندازه `256` بیت می باشد ک یک عدد بسیار بزرگ است و در واقع برای `id_` ها بهتر است از یک عدد بزرگ استفاده کرد و همچنین همه توابع باید آی دی داشته باشند.
+##### memory
+در واقع `memory` فقط یک فضای موقتی برای آرگومان های یک تابع می باشد ک پس از اجرای تابع، حذف می شوند و فرق آن با `storage` این است ک در `storage` داده ها بیشتر می مانند و می توان بین توابع `smart contract` آن ها را پاس داد.
+##### function args
+در واقع آرگومان های تابع، مانند یک `schema` عمل می کنند و ساختار داده هایی ک ما میخواهیم ذخیره کنیم و یا نمایش دهیم را می سازند.
+##### struct
+در واقع `struct` مانند یک `interface` و کلاس عمل می کند یا ب شکل بهتر،شبیه ب `abstract` می باشد ک هم می توان ب عنوان `data type` و هم ب عنوان یک `instantiate` از آن استفاده کرد.
+
+در حالت کلی در `solidity` ساخت یک متغیر اینگونه می باشد:
+```text
+[data type] [name] = [value];
+```
+##### mapping
+در واقع `mapping` یک `data structure` است ک ب صورت `key : value` می باشد و با `blockchain` مانند یک دیتابیس رفتار می کند ک در این مورد، `item` های ما را با یک آی دی خاص `uint256` در بلاکچین ذخیره می کند.
+
+🎉 پس در حالت کلی برای ذخیره سازی از `mapping` استفاده می شود.
+[mapping in solidity](https://www.alchemy.com/overviews/solidity-mapping#:~:text=Mapping%20is%20a%20hash%20table,type%20can%20be%20any%20type.)
+
+🎉 همچنین می توان ب صورت توو در توو نیز از `mapping` استفاده کرد.
+
+🎉 در واقع `mapping` ب ما چیزی شبیه ب `array` می دهد ک می توان دیتای ساخته شده در تابع را در ایندکس های آن ذخیره کرد: `items[_id] = item`
+##### event
+در `solidity` می توان از رویداد ها نیز استفاده کرد:
+
+- مثلا برای اینکه هرگاه تابع ما فراخوانی شد، برای کاربر یک `notification` یا ایمیل یا هرچیز دیگری ارسال کنیم.
+- یا مثلا می توان تعداد دفعاتی ک این تابع فراخوانی شده است را ببینیم ک برای آمارگیری بسیار کاربرد دارد.
+##### modifier
+در واقع توسط `modifier` می توان کاری را قبل اجرا شدن کد های یک تابع یا بعد از آن انجام داد، ک در اینجا ما می خواهیم ک
+فقط `owner` بتواند تابع `list` را اجرا کند و سپس آن را قبل از `{}` تابع قرار می دهیم.
+
+🎉 برای مشخص کردن قبل یا بعد تابع نیز، از `;_` استفاده میکنیم ک در واقع یعنی بقیه تابع
+##### require
+توسط این تابع می توان چک کرد ک در صورت درست بودن یک شرطی، ادامه فرایند یا ادامه اجرا شدن کدها انجام شود، در غیر اینصورت، ادامه ندهد، ک یک پارامتر ورودی میگیرد و این پارامتر باید ب صورت `boolean` باشد.
+
+🎉 در این مورد، ما می خواهیم ک فقط کسی ک صاحب سایت می باشد، بتواند این تابع یا این `transaction` را صدا بزند.
+##### payable
+در واقع `payable` نیز یک `modifier` درون خود `solidity` می باشد ک توسط آن، خریداران می توانند ب این قرارداد، `ether` ارسال کنند و در واقع خرید کنند و مقادیر ارسالی ب صورت `found`
+درون بلاکچین ذخیره می شوند.
+##### block
+در واقع توسط `block` می توان تایم ذخیره شدن مقدارمان یا حتی `blockhash` آن مقدار ذخیره شده را بدست آورد.
+##### msg
+در واقع `msg` حاوی اطلاعات کسی است ک درخواستی را ب `smart contract` میفرستد، این شخص می تواند `deployer` یا حتی `buyer` باشد.
+##### owner.call
+برای اینکه بتوانیم `found` ذخیره شده در بلاکچین را بیرون بکشیم، می توانیم از `call` یا `transfer` استفاده کنیم.
+
+- در اینجا درواقع `address(this)` یعنی آدرس `found` ما
+- و `require(success)` در واقع یک شرط است ک فقط `success` بودن عملیات را چک می کند.
+
+### Test
+3. این کد ها چون بعد از `deploy` وارد بلاک چین می شوند، پس قابلیت تغییر ندارند بهتر است ک برای آن ها تست بنویسیم.
+```ts title="test/Dappazon.test.ts"
+import {ethers} from "hardhat";
+import {expect} from "chai";
+
+const tokens = (n: any) => {
+    return ethers.utils.parseUnits(n.toString(), "ether");
+};
+
+describe('Dappazon', () => {
+    let dappazon: any;
+    let deployer: any, buyer: any;
+    beforeEach(async () => {
+        //? Setup Accounts
+        [deployer, buyer] = await ethers.getSigners();
+        // console.log(deployer.address);
+        // console.log(buyer.address);
+
+        //? Deploy contract
+        const Dappazon = await ethers.getContractFactory("Dappazon");
+        dappazon = await Dappazon.deploy();
+    })
+    describe("Deployment", () => {
+        it("Sets the owner", async () => {
+           expect(await dappazon.owner()).to.equal(deployer.address)
+        });
+        it("Has a name", async () => {
+            const name = await dappazon.name();
+            expect(name).to.equal("Dappazon");
+        })
+    })
+});
+```
+- در اینجا ما توسط `ether` یک کپی از `smart contract` مان میگیریم و آن را تست میکنیم.
+- در واقع `hardhat` از `chai` برای تست نویسی استفاده میکند.
+- در واقع هر متغییری ک در فایل `sol` مان می سازیم، در تستمان ب آن دسترسی داریم، مثلا `()dappazon.name`
+#### ethers.getSigners
+🎉 توسط `()await ethers.getSigners` می توان تمامی اطلاعات اکانت های فیک `ether` را مشاهده کرد.
+
+- همچنین می توان از `address` آن ها برای تست هایمان استفاده کنیم.
+- در حالت کلی ب ما 2 مقدار میدهد ک اولی `deployer` و دومی `buyer` می باشد.
+- هم چنین می توان چک کرد ک آیا آدرس `deployer` ما با آدرس `owner` ما یکی است یا خیر، زیرا کسی ک این قرار داد را روی بلاکچین قرار داده است و کسی ک صاحب آن است، باید یکی باشد.
+
+#### ethers.getContractFactory
+در واقع این تابع یک آرگومان ورودی میگیرد ک دقیقا نام `smart contract` ما (`{} contract Dappazon`) و حاوی کل قرارداد ما می باشد.
+#### deploy
+برای تست نویسی، نیاز است ک ب صورت تستی، قراردادمان را `deploy` کنیم تا بتوانیم تمامی موارد را مانند توابع را تست کنیم.
+
+4. بعد از هر تست نیز، می توان از دستور زیر برای اجرای آن استفاده کرد:
+```shell
+npx hardhat test
+```
+#### connect
+در واقع هر گاه بخواهیم از توابع قراردادمان برای یک `deployer` خاص (یعنی یک آدرس خاص دارد) برای تست استفاده کنیم، می توان از `connect` استفاده کرد.
+
+🎉 در واقع یعنی `deployer` می خواهد توسط یک تابع خاص، مقداری را در `blockchain` ذخیره کند.
+```ts
+  describe('Dappazon', () => {
+    // ...
+    describe("Listing", () => {
+        let transaction: any;
+
+        beforeEach(async () => {
+            transaction = await dappazon.connect(deployer).list(
+                ID, // _id
+                NAME, // _name
+                CATEGORY, // _category
+                IMAGE, // _image
+                COST, // _cost
+                RATING, // _rating
+                STOCK // _stock
+            );
+            await transaction.wait();
+        });
+        it("Returns item attributes", async () => {
+            const item = await dappazon.items(ID);
+            // console.log(item)
+            expect(item.id).to.equal(ID);
+            expect(item.name).to.equal(NAME);
+            expect(item.category).to.equal(CATEGORY);
+            expect(item.image).to.equal(IMAGE);
+            expect(item.cost).to.equal(COST);
+            expect(item.rating).to.equal(RATING);
+            expect(item.stock).to.equal(STOCK);
+        });
+    });
+  });
+```
+- در اینجا `list` نام تابعی می باشد ک ما در `Dappazon.sol` ساخته ایم.
+- در حالت کلی فراخوانی این تابع یعنی ما یک `transaction` در این قرارداد انجام داده ایم.
+- در واقع `item` حاوی تمامی اطلاعات داده شده ب تابع `list` می باشد ک ما در یک متغییر ذخیره کرده ایم.`items[_id] = item`
+- در واقع `items` نام `mapping` یی می باشد (در واقع `mapping` نیز یک نوع داده می باشد ک برای متغییر `items` استفاده کردیم.) ک در `Dappazon.sol` ساخته ایم.
+
+##### ether to wei
+برای اینکه ما درحالت کلی از `wei` استفاده میکنیم، پس نیاز داریم ک یک تابع داشته باشیم ک این تبدیل واحد را انجام دهد:
+```ts
+const tokens = (n: any) => {
+    return ethers.utils.parseUnits(n.toString(), "ether");
+};
+// Global constants for listing an item...
+const ID = 1;
+const NAME = "Shoes";
+const CATEGORY = "Clothing";
+const IMAGE = "https://ipfs.io/ipfs/QmTYEboq8raiBs7GTUg2yLXB3PMz6HuBNgNfSZBx5Msztg/shoes.jpg";
+const COST = tokens(1);
+const RATING = 4;
+const STOCK = 5;
+```
+##### emit
+برای اینکه `event` ساخته شده در `smart contract` را تست کنیم، می توانیم ب صورت زیر عمل کنیم:
+```ts
+  describe('Dappazon', () => {
+    // ...
+    describe("Listing", () => {
+      // ...
+        it("Returns item attributes", async () => {
+          // ...
+        });
+        it("Emits List event", () => {
+            expect(transaction).to.emit(dappazon, "List");
+        });
+    });
+  });
+```
+- در واقع ما انتظار داریم ک این `transaction` ما در یک رویدادی را هنگام فراخوانی، `emit` کند ک پارامتر اول آن قرارداد `deploy` شده و پارامتر دوم آن، نام رویداد ما می باشد.
+
+#### ether.provider
+توسط `provider` می توان اطلاعات مربوط ب `buyer` یا `deployer` را از `ether` بگیریم:
+```ts
+  describe('Dappazon', () => {
+    // ...
+    describe("Listing", () => { /* ... */ });
+    describe("Buying", () => {
+        let transaction;
+        beforeEach(async () => {
+            // List an item
+            transaction = await dappazon.connect(deployer).list(ID, NAME, CATEGORY, IMAGE, COST, RATING, STOCK);
+            await transaction.wait();
+
+            // Buy an item
+            transaction = await dappazon.connect(buyer).buy(ID, {value: COST});
+        })
+        it("Updates buyer's order count", async () => {
+            const result = await dappazon.orderCount(buyer.address);
+            expect(result).to.equal(1);
+        });
+        it("Adds the order", async () => {
+            const order = await dappazon.orders(buyer.address, 1);
+            expect(order.time).to.be.greaterThan(0);
+            expect(order.item.name).to.equal(NAME);
+        });
+        it("Updates the contract balance", async () => {
+            const result = await ethers.provider.getBalance(dappazon.address);
+            // console.log(result);
+            expect(result).to.equal(COST);
+        });
+        it("Emits Buy event", () => {
+            expect(transaction).to.emit(dappazon, "Buy");
+        });
+    });
+    describe("Withdrawing", () => {
+        let balanceBefore: any;
+
+        beforeEach(async () => {
+            // List an item
+            let transaction = await dappazon.connect(deployer).list(ID, NAME, CATEGORY, IMAGE, COST, RATING, STOCK);
+            await transaction.wait();
+
+            // Buy an item
+            transaction = await dappazon.connect(buyer).buy(ID, {value: COST});
+            await transaction.wait();
+
+            // Get Deployer balance before
+            balanceBefore = await ethers.provider.getBalance(deployer.address);
+
+            // Withdraw
+            transaction = await dappazon.connect(deployer).withdraw();
+            await transaction.wait();
+        });
+
+        it("Updates the owner balance", async () => {
+            const balanceAfter = await ethers.provider.getBalance(deployer.address);
+            console.log(balanceBefore)
+            console.log(balanceAfter)
+            expect(balanceAfter).to.be.greaterThan(balanceBefore);
+        });
+        it("Updates the contract balance", async () => {
+            const result = await ethers.provider.getBalance(dappazon.address);
+            expect(result).to.equal(0);
+        });
+    });
+  });
+```
+🎉 ما می توانیم ب تمامی توابع `solidity` یک آبجکت بفرستیم ک نام آن `meta data` می باشد(`{value: COST}`)
+
+- در اینجا توسط `getBalance` و آدرس قراردادمان، می خواهیم مقداری ک ب صورت `found` (پولی ک خریدار واریز کرده است و فروشنده می تواند آنرا برداشت کند) در بلاکچین قرار گرفته است را مشاهده کنیم.
+
+- در تست آخر ما نیاز داریم ک `balance` کل قرارداد را ب دست بیاوریم، زیرا ما کل `found` را بیرون کشیده ایم.
+
+### Deploy
+برای اینکه روی سیستممان یک بلاکچین برای `development` بسازیم، لازم است ب صورت زیر عمل کنیم:
+
+1. ابتدا در یک ترمینال جدا باید دستور زیر را اجرا کرده تا محیط شبیه سازی شده بلاکچین ما اجرا شود و نباید در طول کار روی پروژه، آن را ببندیم.
+```shell
+npx hardhat node
+```
+2. حال در فولدر `script` یک فایل ب نام `script.ts` میسازیم و سپس ب صورت زیر عمل می کنیم:
+```ts
+import {ethers} from "hardhat";
+import hre from "hardhat";
+import items from "../src/items"; //? Products
+
+const tokens = (n: string | number) => {
+    return ethers.utils.parseUnits(n.toString(), "ether");
+}
+
+async function main() {
+    //? Setup accounts
+    const [deployer] = await ethers.getSigners();
+
+    //? Deploy Dappazon
+    const Dappazon = await hre.ethers.getContractFactory("Dappazon");
+    const dappazon = await Dappazon.deploy();
+    await dappazon.deployed();
+
+    console.log(`Deployed Dappazon Contract at: ${dappazon.address}\n`);
+
+    //? List items...
+    for (let i = 0; i < items.length; i++) {
+        const transaction = await dappazon.connect(deployer).list(
+            items[i].id,
+            items[i].name,
+            items[i].category,
+            items[i].image,
+            tokens(items[i].price),
+            items[i].rating,
+            items[i].stock
+        )
+        await transaction.wait();
+
+        console.log(`Listed item ${items[i].id}: ${items[i].name}`);
+    }
+}
+
+// We recommend this pattern to be able to use async/await everywhere
+// and properly handle errors.
+main().catch((error) => {
+    console.error(error);
+    process.exitCode = 1;
+});
+```
+3. حال باید اسکریپتی ک نوشته ایم را اجرا کنیم، تا `smart contract` ما روی بلاکچین `localhost` ما `deploy` شود:
+```shell
+npx hardhat run scripts/deploy.ts --network localhost
+```
+4. حال باید وارد `metamask` روی مرورگرمان شویم و ب صورت دستی یک اکانت را وارد کنیم:
+- در واقع `New RPC URL` را می توان از ترمینالی ک در آن `node` مان را روی لوکال اجرا کرده ایم، پیدا کنیم.
+- برای `Chain ID` نیز چون از لوکالمان استفاده میکنیم و تنظیمات `hardhat` مان ب صورت پیش فرض میباشد، پس همان `31337` می باشد.
+- سپس `Currency symbol` نیز روی `ETH` قرار می دهیم و سیو می کنیم.
+5. حال باید روی آیکون دایره ای شکل متامسکمان کلیک کرده و گزینه `Import Account` را زده و سپس `Private Key` یکی از اکانت هایی ک با دستور `node` روی لوکالمان نمایش داده شده بود را در آنجا کپی کنیم.
+
+### Tips
+توسط دستور زیر می توان اطلاعات اکانت های `fake` یی ک `hardhat` در اختیار ما برای تست قرار داده است، دسترسی پیدا کنیم:
+```shell
+npx hardhat node
+```
+🎉 برای تست نویسی می توان از این اکانت ها استفاده کرد.
+
+- همانطور ک `metamask` مرورگر ما را ب یک مرورگر بلاکچینی تبدیل می کند، برای تبدیل کردن `application` مان نیز ما ب `ethers` نیاز داریم تا آن را ب یک برنامه بلاکچینی تبدیل کند.
+- در واقع `ABI` همان `Application Binary Interface` می باشد و زمانی از این الگو استفاده می شود ک بخواهیم یک برنامه ک ب صورت `binary` می باشد را ب یک برنامه ک
+توسط یوزر اجرا می شود، وصل کنیم.
+- برای پیدا کردن `ABI` های یک `smart contract` می توان وارد مسیر زیر شده و موارد داخل فایل `json` را درون فایل موردنظرمان کپی کنیم: `artifacts/contracts/Dappazon.sol/Dappazon.json`
+
+##### ether & wei
+در واقع همانند دلار ک ب صورت زیر می توان نوشت و یک واحد کوچک تر نیز دارد، `ether` نیز دقیقا ب همین شکل است:
+```text
+1.00 Dollar = 100 Cent
+1.000,000,000,000,000,000 Eth = 10^18 Wei
+```
+همچنین ما در `smart contract` از اعداد دسیمال استفاده نمی کنیم و هم چنین از واحد های کوچک مانند `wei` استفاده می کنیم.
