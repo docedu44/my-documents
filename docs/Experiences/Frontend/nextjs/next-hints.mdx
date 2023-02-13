@@ -1,0 +1,480 @@
+---
+id: next-hints
+title: Next
+---
+## Next 13
+### Folder Structure and page
+در ورژن جدید `Next` برای تعریف کردن یک صفحه جدید باید ب صورت زیر عمل کرد:
+
+1. در فولدر `app` باید یک فولدر با نام مسیری ک می خواهیم، بسازیم.
+2. باید درون آن فولدر فایلمان را با نام `page.tsx` بسازیم، زیرا این نام یک نام رزرو شده می باشد.
+[Next Page](https://beta.nextjs.org/docs/api-reference/file-conventions/page)
+
+### Server request
+برای اینکه ب یک `api` درخواست بزنیم، باید ب صورت زیر عمل کنیم:
+```tsx
+import Link from "next/link";
+import { Todo } from "typings";
+
+const fetchTodos = async () => {
+  const res = await fetch("https://jsonplaceholder.typicode.com/todos/");
+  const todos: ReadonlyArray<Todo> = await res.json();
+  return todos;
+};
+
+async function TodosList() {
+  const todos = await fetchTodos();
+  return (
+    <>
+      {todos.map((todo) => (
+        <p key={todo.id}>
+          <Link href={`/todos/${todo.id}`}>Todo: {todo.id}</Link>
+        </p>
+      ))}
+    </>
+  );}
+export default TodosList;
+```
+
+### Dynamic Route
+همچنین برای `dynamic route` نیز باید یک فولدر درون فولدر `app` بسازیم ک با `[]` و یک نام برای مقدار داینامیکمان داخل آن ساخته شده باشد:
+```tsx title="src/app/todos/[todoId]/page.tsx"
+import Link from "next/link";
+import { Todo } from "typings";
+
+type PageProps = {
+  params: {
+    todoId: string;
+  };
+};
+
+const fetchTodo = async (todoId: string) => {
+  const res = await fetch(
+    `https://jsonplaceholder.typicode.com/todos/${todoId}`
+  );
+  const todo: Todo = await res.json();
+  return todo;
+};
+
+async function TodoPage({ params: { todoId } }: PageProps) {
+  const todo = await fetchTodo(todoId);
+
+  return (
+    <>
+    <Link href="/todos">Todos List</Link>
+      <div className="p-10 bg-yellow-200 border-2 m-2 shadow-lg">
+        <p>
+          #{todo.id}: {todo.title}
+        </p>
+        <p>Completed: {todo.completed ? "Yes" : "No"}</p>
+        <p className="border-t border-black mt-5 text-right">
+          By User: {todo.userId}
+        </p>
+      </div>
+    </>
+  );}
+export default TodoPage;
+```
+ک برای دریافت مقدار داینامیک ارسالی، می توان از `props` ارسال شده ب کامپوننت، استفاده کرد. (در واقع `search param` نیز موجود می باشد)
+
+### Rendering Techniques
+🚩 در واقع `Next.js` ب صورت خودکار تشخیص می دهد برای مدیریت درخواست هایمان، بهتر است ک از چ تکنیکی استفاده شود اما اگر بخواهیم ب صورت اجباری
+اینکار را انجام دهیم، باید ب صورت زیر عمل کنیم.
+#### SSR
+Server Side Rendering
+```tsx
+const fetchTodo = async (todoId: string) => {
+  const res = await fetch(
+    `https://jsonplaceholder.typicode.com/todos/${todoId}`, {cache: "no-cache"}
+  );
+  return await res.json();
+};
+```
+🎉 با هر درخواست برای یک صفحه، آن صفحه در سرور `generate` می شود و سپس ب فرانت ارسال می شود ک برای زمانی ک بدانیم، یک صفحه قرار است ب صورت داینامیک
+تغییر کند، بهتر است از این روش استفاده شود.
+
+#### SSG
+Static Site Generation
+```tsx
+const fetchTodo = async (todoId: string) => {
+  const res = await fetch(
+    `https://jsonplaceholder.typicode.com/todos/${todoId}`, {cache: "force-cache"}
+  );
+  return await res.json();
+};
+```
+🎉 در واقع صفحاتی ک ب صورت `SSG` هستند، در هنگام `build` پروژه، ساخته می شوند و محتوای آن ها کاملا استاتیک می باشد.
+
+#### ISR
+Incremental Static Regeneration
+```tsx
+const fetchTodo = async (todoId: string) => {
+  const res = await fetch(
+    `https://jsonplaceholder.typicode.com/todos/${todoId}`, {next: {revalidate: 60}}
+  );
+  return await res.json();
+};
+```
+🎉 در این روش، در واقع ما می گوییم ک هر 60 ثانیه، این صفحه را بازسازی کن و در درخواست جدید، اطلاعات جدید را جایگزین کن.
+
+🎉 در واقع `ISR` چیزی مابین `SSR` و `SSG` می باشد.
+
+### Prebuild
+برای اینکه صفحاتی را ک می دانیم ثابت هستند، ب صورت `prebuild` در بیاوریم، باید ب صورت زیر عمل کنیم:
+```tsx
+import Link from "next/link";
+import { Todo } from "typings";
+
+type PageProps = {
+  params: {
+    todoId: string;
+  };
+};
+
+const fetchTodo = async (todoId: string) => {
+  const res = await fetch(
+    `https://jsonplaceholder.typicode.com/todos/${todoId}`,
+    { next: { revalidate: 60 } }
+  );
+  const todo: Todo = await res.json();
+  return todo;
+};
+
+async function TodoPage({ params: { todoId } }: PageProps) {
+  const todo = await fetchTodo(todoId);
+
+  return (
+    <>
+      <Link href="/todos">Todos List</Link>
+      <div className="p-10 bg-yellow-200 border-2 m-2 shadow-lg">
+        <p>
+          #{todo.id}: {todo.title}
+        </p>
+        <p>Completed: {todo.completed ? "Yes" : "No"}</p>
+        <p className="border-t border-black mt-5 text-right">
+          By User: {todo.userId}
+        </p>
+      </div>
+    </>
+  );
+}
+
+export default TodoPage;
+
+export const generateStaticParams = async () => {
+  const res = await fetch(`https://jsonplaceholder.typicode.com/todos/`);
+  const todos: Todo[] = await res.json();
+
+  //? For this app, we are only prebuilding the first 10 pages to avoid being rate limited by the DEMO API
+  const trimmedTodos = todos.splice(0, 10);
+
+  return trimmedTodos.map((todo) => ({
+    todoId: todo.id.toString(),
+  }));
+};
+```
+🎉 در این مثال فقط 10 صفحه اول ب صورت `SSG` ساخته می شوند.
+
+### notFound
+برای اینکه اگر یک `route` وجود نداشت، می توانیم از این تابع `Next` استفاده کنیم:
+```tsx
+import {notFound} from "next/navigation";
+
+export const dynamicParams = true;
+
+const fetchTodo = async (todoId: string) => {/*...*/};
+
+async function TodoPage({ params: { todoId } }: PageProps) {
+  const todo = await fetchTodo(todoId);
+
+  if (!todo.id) return notFound();
+
+  return /*...*/;
+}
+```
+🎉 همچنین می توان صفحه `not found` پیش فرض را ب صورت زیر تغییر داد:
+
+- درون فولدر `app` یک فایل با نام `not-found.tsx` می سازیم و درون آن کد های دلخواهمان را قرار می دهیم.
+```tsx title="src/app/not-found.tsx"
+function NotFound() {
+  return (
+    <div>Whooops, We couldn't find the Todo you are looking for!</div>
+  )
+}
+export default NotFound
+```
+🚩 نام آن باید دقیقا ب صورت `not-found` نوشته شود.
+
+[Not Found](https://beta.nextjs.org/docs/api-reference/file-conventions/not-found)
+
+### layout
+در هر فولدر می توان از 7 فایل با نام های رزرو شده استفاده کرد ک `layout` نیز یکی از آن ها است.
+یعنی می توان در هر صفحه یک `layout` مخصوص ب آن صفحه داشته باشیم و فقط کافیست ک کد هایمان را درون آن قرار دهیم و خود نکست آن را نمایش می دهد:
+```tsx title="src/app/todos/layout.tsx"
+function RootLayout({ children }: { children: ReactNode }) {
+  return (
+    <main className="flex">
+      <div>
+        {/* @ts-ignore */}
+        <TodosList />
+      </div>
+      <div className="flex-1">{children}</div>
+    </main>
+  );}
+export default RootLayout;
+```
+🎉 دقیقا کد های ما بجای `h1`، هنگام کلیک کردن روی هر `todo` لود می شود.
+
+🎉 در واقع هر جیزی ک در فایل `page.tsx` نوشته ایم، درون `children` قرار می گیرد.
+```tsx title="src/app/todos/page.tsx"
+function Todos() {
+  return (
+    <div>
+      <h1>This is where the Todos will be listed...</h1>
+    </div>
+  );}
+export default Todos;
+```
+[Layout](https://beta.nextjs.org/docs/api-reference/file-conventions/layout)
+
+### head
+این نام نیز یک نام رزرو شده می باشد ک می توان در هر فولدر یا `segment` از آن استفاده کرد:
+```tsx title="src/app/search/head.tsx"
+function Head() {
+  return (
+    <>
+        <title>The Search Page</title>
+    </>
+  )
+}
+export default Head
+```
+[Head](https://beta.nextjs.org/docs/api-reference/file-conventions/head)
+
+🎉 باید دقت داشت ک حتما باید تگ های مربوطه درون `</><>` باشند ن درون تگ `head`
+
+- این روش هم جوابگو می باشد ولی روش قبل بهتر است.
+```tsx title="src/app/head.tsx"
+export default function Head({title}: {title: string}) {
+  return (
+    <>
+      <title>{title}</title>
+      <meta content="width=device-width, initial-scale=1" name="viewport" />
+      <meta name="description" content="Generated by create next app" />
+      <link rel="icon" href="/favicon.ico" />
+    </>
+  )
+}
+```
+```tsx title="src/app/todos/page.tsx"
+import Head from "@/app/head";
+function Todos() {
+  return (
+    <>
+    <Head title="Todos"/>
+      <div>
+        <h1>This is where the Todos will be listed...</h1>
+      </div>
+    </>
+  );
+}
+export default Todos;
+```
+
+### client components
+برای اینکه کامپوننتی بسازیم ک `interactive` باشد، باید ب صورت زیر عمل کرد:
+```tsx title="src/app/search/Search.tsx"
+"use client";
+import { FormEvent, useState } from "react";
+import { useRouter } from "next/navigation";
+
+function Search() {
+  const [search, setSearch] = useState("");
+  const router = useRouter();
+
+  const handleSearch = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setSearch("");
+    router.push(`/search/${search}`);
+  };
+
+  return (
+    <form onSubmit={handleSearch}>
+      <input
+        type="text"
+        value={search}
+        placeholder="Enter the Search term"
+        onChange={(e) => setSearch(e.target.value)}
+      />
+      <button className="bg-blue-500 text-white font-bold py-2 px-4 rounded-lg">
+        Search
+      </button>
+    </form>
+  );}
+export default Search;
+```
+[Client Components](https://beta.nextjs.org/docs/rendering/server-and-client-components#client-components)
+
+🚩 در واقع در صفحه `search` مان، فقط بخش `input`، یعنی همین کامپوننت ب صورت `client` می باشد و بقیه آن ب صورت `server component` می باشد.
+ک در واقع این بخش درون صفحه `server component` مان `stream` می شود.
+
+### loading
+این نام نیز یکی از 7 نام رزرو شده است ک می توان درون هر `segment` قرار داد و هرگاه یک در خواست داشته باشیم و یا چیزی باعث بلاک شدن کد های ما بشود، فایل `loading.tsx` درون آن فایل نمایش داده می شود:
+```tsx title="src/app/search/[searchTerm]/page.tsx"
+import { BaseResponse, getJson, GoogleParameters } from "serpapi";
+
+type PageProps = {
+  params: {
+    searchTerm: string;
+  };
+};
+
+const search = async (searchTerm: string) => {
+const res: BaseResponse<GoogleParameters> = await getJson("google", {
+    api_key: process.env.API_KEY,
+    q: searchTerm
+})
+  return res;
+};
+
+async function SearchTerm({ params: { searchTerm } }: PageProps) {
+  const searchResults = await search(searchTerm);
+
+  return (
+    <div>
+      <p className="text-gray-500 text-sm">You searched for: {searchTerm}</p>
+      <ol className="space-y-5 p-5">
+        {searchResults.organic_results.map((result: any) => (
+          <li key={result.position} className="list-decimal">
+            <p className="font-bold">{result.title}</p>
+            <p>{result.snippet}</p>
+          </li>
+        ))}
+      </ol>
+    </div>
+  );}
+export default SearchTerm;
+```
+```tsx title="src/app/search/[searchTerm]/loading.tsx"
+function Loading() {
+  return <div>Loading Search Results...</div>;
+}
+export default Loading;
+```
+
+### error
+در واقع `error` نیز یکی از کلمات رزور شده می باشد و می توان ارور هایی ک مثلا مربوط ب درخواست ها می باشد را هندل کنیم:
+```tsx title="src/app/search/[searchTerm]/page.tsx"
+/*...*/
+const search = async (searchTerm: string) => {
+const res: BaseResponse<GoogleParameters> = await getJson("google", {
+    api_key: process.env.API_KEY,
+    q: searchTerm
+})
+  throw new Error("WHOOPS something broke");
+  return res;
+};
+
+async function SearchTerm({ params: { searchTerm } }: PageProps) {/*...*/}
+export default SearchTerm;
+```
+```tsx title="src/app/search/[searchTerm]/error.tsx"
+'use client'; // Error components must be Client components
+
+import { useEffect } from 'react';
+
+export default function Error({
+  error,
+  reset,
+}: {
+  error: Error;
+  reset: () => void;
+}) {
+  useEffect(() => {
+    // Log the error to an error reporting service
+    console.error(error);
+  }, [error]);
+
+  return (
+    <div>
+      <h2>Something went wrong!</h2>
+      <button
+        onClick={
+          // Attempt to recover by trying to re-render the segment
+          () => reset()
+        }
+      >
+        Try again
+      </button>
+    </div>
+  );
+}
+```
+[Error](https://beta.nextjs.org/docs/api-reference/file-conventions/error)
+
+🎉 در واقع می توان درون هر `segment` یا فولدری، مانند بقیه فایل ها با نام های رزور شده، از `error` استفاده کرد و باید دقت داشت ک حتما `use client` باشد.
+
+### Route Group
+توسط این قابلیت می توان بدون تغییر دادن `route` هایمان، آن ها را فولدر بندی کنیم، ک می توان ب صورت زیر عمل کرد:
+
+1. ابتدا یک فولدر با نام دلخواه و درون پرانتز می سازیم `(user)` و حتما باید درون `app` باشد.
+2. سپس فایل هایی ک می خواهیم در این گروه باشد، را درون آن قرار می دهیم.
+
+[Route Groups](https://beta.nextjs.org/docs/routing/defining-routes#route-groups)
+
+- باید دقت داشت ک اگر بخواهیم برای هر کدام از `route group` هایمان یک `layout` خاص داشته باشیم، باید `layout` درون روت `app` را حذف کرده و سپس برای هر کدام از `route group` ها
+یک `layout` جدا بسازیم.
+- همچنین ما فقط باید یک فایل `page.tsx` درون روت فولدر `app` داشته باشیم و نباید درون فولدر های `route group`، ب صورت جداگانه یک فایل `page.tsx` بسازیم!
+
+### Suspense
+می توان در `Next` نیز از `Suspense` برای لودینگ ها استفاده کرد:
+```tsx
+import {Suspense} from "react";
+
+export default function Home() {
+    return (
+        <div>
+            <Suspense fallback={<p className="text-red-500">Loading the Todos...</p>}>
+                <h1>Loading Todos</h1>
+                <div className="flex space-x-2">
+                    {/*@ts-ignore*/}
+                    <TodosList/>
+                </div>
+            </Suspense>
+            <Suspense fallback={<p className="text-blue-500">Loading the Trolley...</p>}>
+                <h1>Loading Shopping Trolley</h1>
+                <div className="flex space-x-2">
+                    {/*@ts-ignore*/}
+                    <TodosList/>
+                </div>
+            </Suspense>
+        </div>
+    );}
+```
+
+### Tips
+1. باید در نظر داشت ک تمامی صفحاتی در ک فولدر `app` می سازیم، در واقع `server component` هستند و نمی توان از موارد مربوط ب کلاینت، مانند `event` ها استفاده کرد.
+2. برای استفاده از `event` ها باید در اول فایلمان این 2 کلمه را بنویسیم:
+```txt
+"use client"
+
+  // codes
+```
+[When to use server vs client components](https://beta.nextjs.org/docs/rendering/server-and-client-components#when-to-use-server-vs-client-components)
+3. هر جیزی خارج از فولدر `app` ب صورت `use client` در نظر گرفته می شود و در سرور رندر نمی شود.
+
+##### next export
+می توانیم توسط دستور `next export` در `package.json` از پروژه خود خروجی `html` بگیریم.
+
+همچنین توسط پکیج `serve` می توانیم `html` هایمان را `serve` کنیم
+```bash
+    npm i -g serve
+```
+
+سپس برای اجرا شدن باید به صورت زیر عمل کنیم:
+```bash
+    serve -s out -p 8001
+```
+`out` در واقع نام فولدری می باشد که می خواهیم `serve` شود.
+
+🎉 باید این نکته را در نظر داشت که اگر بخواهیم پروژمان را `export` بگیریم، نمیتوانیم در پروژه مان از `Image` خود `next` استفاده کنیم.
