@@ -1,0 +1,233 @@
+---
+title: Blockchain
+---
+
+## Blockchain
+- در واقع هر `smart contract` یا هر `transaction` ما ابتدا باید وارد `mempool` شود و بعد از قرار گرفتن در یک صف، پس از تایید در `blockchain` قرار میگیرد.
+- در حالت کلی، `miner` ها از `mempool` یک `transaction` را برمیدارند و پس از انجام یکسزی کار، آن را در `blockchain` قرار می دهند. (معمولا با `transaction` بزرگتر، ابتدا انجام می شوند.--)
+- در واقع `Gas Fee` مقداری می باشد ک ب ازاری هربار صدا زدن یک `function` از یک `smart contract` یا در حالت کلی یک `transaction` باید پرداخت کرد. همچنین این `fee` باعث جلوگیری از هک می شود، زیرا هکر باید ب ازای هر `transaction`، مقداری `ether` بپردازد.
+- تمامی بلاک ها در بلاکچین، بهم متصل هستند و می توان ب طور مثال در `Ganache` بعد از هر `Transaction` در قسمت `Blocks` و در هر بلاک، `block hash` بلاک قبلی را مشاهده کرد.
+- در بلاکچین ما یک اصطلاح داریم ب نام `PoW` یا `Proof of Work` ک در واقع همان `mining` می باشد ک یک پروسه ای است ک در آن `miner` یک `transaction` را
+از `mempool` بر می دارد و طی یکسری مراحل، آن را ب `block` های بلاکچین اضافه می کند و یک مقداری را ب عنوان جایزه دریافت می کند.
+- در حال حاضر ما دیگر `PoW` نداریم و این بخش ب `PoS` یا `Proof of Stake` تغییر کرده است.
+- در واقع `nonce` نیز باعث تغییر در `hash` می شود، هر چیزی ک در هر `transaction` تغییر کند، باعث تغییر `hash` می شود.
+- در این سایت می توان ساز و کار `blockchain` را مشاهده کرد:
+[Blockchain Demo](https://andersbrownworth.com/blockchain/blockchain)
+
+### Gas
+برای هر `transacrion` در `blockchain` باید یک مقداری پرداختی داشته باشیم ک نام آن `Gas` می باشد و این `transacrion` می تواند حتی صدا زدن یک تابع ساده باشد، در هر صورت باید یک مقداری به صورت `eth` پرداخت شود.
+
+- در واقع در بلاکچین محاصبات ب صورت زیر می باشد:
+```txt
+1 wei = 1 wei
+1 G wei = 1 000 000 000
+1 eth = 1 000 000 000 000 000 000 (18 zero)
+```
+[Ether Currency Units](https://github.com/ethereumbook/ethereumbook/blob/develop/02intro.asciidoc#ether-currency-units)
+
+- مثلا برای صدا زدن یک تابع ک خودش یک `transacrtion` حساب می شود، بخ صورت زیر یک `Gas fee` مشخص شده است:
+```txt
+0.00032 eth = 32000 G wei
+```
+- در حالت کلی `transaction` های ک برای انتقال پول انجام می شوند، یک فی ثابت دارند ک بر اساس سختی شبکه یا ترافیک شبکه تغییر میکنند. (در حالت کلی `21.000 Gas` می باشد.)
+- برای مشاهده تمامی `transaction` ها در `blockchain` می توان از سایت زیر استفاده کرد:
+[Ether Scan](https://etherscan.io/)
+
+- در واقع هرجقدر `transaction` ما بزرگتر باشد، یعنی رقمی ک می خواهیم جابه جا شود بزرگتر باشد، سریعتر انجام می شود، در مقابل باید `Gas Fee` بیشتری بدهیم ک می توان در سایت زیر مقدار حدودی هر کدام را مشاهده کرد:
+[Ether Gas Station](https://etherscan.io/gastracker)
+
+#### Calculate
+برای محاسبه اینکه ب ازای یک `transaction` با رقم پایین باید ب صورت زیر عمل کرد:
+```txt
+Gas Limit (Usage by Txn) * Gas Price (Gwei) = Transaction Fee (Gwei) (Transaction Fee * 10^9 === Eth)
+
+21,000 * 23.086707629 Gwei = 484,820.860209 Gwei (484,820.860209 * 10^9 === 0.000484820860209 Eth)
+```
+و برای محاسبه ب صورت دلار، باید ارزش هر `eth` ب دلار را در `eth` ب دست آمده برای هر `transaction` یا همان `gas fee` ضرب می کنیم:
+```txt
+ETH Price * Transaction Fee (Eth) = Transaction Fee ($)
+
+1,849.37 * 0.000484820860209 = $0.90
+```
+
+### Node
+در واقع `Node` ها کامپیوتر هایی می باشند ک ب شبکه بلاکچین متصل هستند.
+
+- برای اتصال ب شکبه سراسری `Ethereum` ب یک نرم افزار `client` نیاز داریم ک می توان ب `Geth (Go)` و `Parity (Rust)` اشاره کرد.
+- درون این نرم افزار ها یک `EVM` وجود دارد ک در واقع `Ethereum Virtual Machine` می باشد ک `byteCode` ها را اجرا می کند و در بلاکچین قرار می دهد.
+- همچنین `Client` ب `EVM`، `state` و `Transaction mempool` دسترسی دارد.
+- در واقع `State` ها از ساختار `Merkle Tree` استفاده می کنند ک یک بلاک از تمامی `transaction` ها می باشد.
+- هر `Node` ب صورت `P2P (peer to peer)` ب دیگر `Node` ها متصل می باشد.
+- در حالت کلی ما انواع مختلفی از `node` ها را در شبکه اتریوم داریم اما 3 دسته مهم آن ها ب صورت زیر می باشد:
+1. حجیم ترین آن ها `Full Node` می باشد ک شامل تمامی `transaction` های دیگر `node` ها و همچنین تمامی `state` ها می باشد.
+2. بعد از آن `Light Node` می باشد ک شامل `header` های بلاک ها می باشد و بسیار کوچک تر است.
+3. و در آخر نیز `Archive Node` می باشد ک در واقع `state` بلاک ها را آرشیو می کند.
+- در حالت کلی می توان ب صورت مثال زیر شکل کلی موارد بالا را مشاهده کرد:
+```text
+    ---------------------
+    | Console (Truffle) |   Client
+    ---------------------
+            ||||
+            ||  ====================
+            ||                      ||
+        ------------                ||
+        | WEB3 API |                ||
+        ------------                ||
+            ||                      ||
+            ||                      ||
+            ||                        ========================
+      -----------------                                       ||
+      | Private Chain |                           ------------------------
+      |               |     Network               | Other Ethereum Nodes |
+      |   (Ganache)   |                           ------------------------
+      -----------------
+```
+### difficulty
+در واقع تعداد صفر های مورد نیاز در اول `hash` می باشد و تعداد آن یکی یکی بالا می رود و هر عدد باعث سخت تر شدن حل شدن معمای آن `transaction` توسط `miner` می شویم ک هر
+1 واحد باعث می شود ک این معما 16 برابر سخت تر شود.
+
+## Truffle
+در واقع این پکیج یک `development environment` برای `solidity` می باشد.
+
+### Bootstrap
+1. نصب آن ب صورت `global`
+```shell
+npm i truffle -g
+```
+[Install](https://trufflesuite.com/docs/truffle/how-to/install/)
+2. مقداردهی اولیه و نصب فایل های لازم
+```shell
+truffle init
+```
+[Initialize](https://trufflesuite.com/docs/truffle/how-to/create-a-project/)
+
+3. Compile
+```shell
+truffle compile
+```
+### Migrate
+در واقع برای `deploy` کردن باید برای هر `smart contract` یک فایل `migrate` بسازیم ک نام آن باید با عدد شروع شود و ب صورت زیر نوشته شود:
+```js title="migrations/2_faucet_migration.js"
+// eslint-disable-next-line no-undef
+const FaucetContract = artifacts.require("Faucet");
+
+module.exports = function (deployer) {
+    deployer.deploy(FaucetContract);
+};
+```
+توسط این دستور می توان می توان `smart contract` مان را `deploy` کنیم.
+```shell
+truffle migrate
+```
+- برای `migrate` کردن دوباره یک `smart contract` باید حتما ب صورت زیر عمل کرد:
+```shell
+truffle migrate --reset
+```
+### Console
+توسط این دستور ب محیط `truffle` و نتورکمان متصل می شویم ک ب ما اجازه دسترسی ب `contract` هایمان را می دهد:
+```shell
+truffle console
+```
+- حال می توان از کلمه `accounts` استفاده کرد تا لیست تمامی اکانت های فیکه روی `ganache` را ببینیم.
+
+#### Web3.js
+##### transaction
+برای انجام `transaction` باید از دستور های `web3.js` استفاده کنیم:
+```shell
+truffle(development)> web3.eth.sendTransaction({from: accounts[0], to: "0xd2383f4E9FC09c04504F48591a5Da8B925FaC7fb", value: "10000000000000000000"})
+```
+[sendtransaction](https://web3js.readthedocs.io/en/v1.2.11/web3-eth-personal.html?highlight=sendTransaction#sendtransaction)
+
+- در واقع `from` آدرس اکانت مبدا می باشد.
+- همچنین `to` آدرس اکانت مقصد یا آدرس `smart contract` مان می باشد.
+- و `value` نیز مقدار `eth` یی ک می خواهیم ارسال کنیم می باشد ک باید حتما ب صورت `wei` باشد.
+- حال می توان `contract` مان را مشاهده کنیم ک `ballance` آن ب `10` تغییر کرده است و این مقدار از اکانت مبدا نیز کم شده است.
+- همچنین می توان برای `sendTransaction` مقدار `gas` را نیز تعیین کرد.
+
+##### getBlock
+برای گرفتن تمامی اطلاعات یک بلاک، می توان ب صورت زیر عمل کرد:
+```shell
+truffle(development)> web3.eth.getBlock("9")
+```
+- باید شماره بلاکی ک می خواهیم را ب تابع بدهیم ک می توان آن را در `Ganache` در قسمت بلاک ها پیدا کرد.
+###### hash & parentHash
+- در این مورد اگر اطلاعات بلاک قبلی، یعنی 8 را بگیریم، می توان دید ک `parentHash` بلاک 9 در واقع `hash` بلاک 8 می باشد و تمامی بلاک ها ب این صورت بهم متصل هستند.
+###### nonce
+- همچنین ما یک پراپرتی ب نام `nonce` داریم ک در واقع مانند `id` می باشد و با هر `transaction` یک واحد ب آن اضافه می شود تا از تکرار یک `transaction` جلوگیری شود و فقط زمانی اضافه می شود
+ک شما انجام دهنده آن `transaction` باشید. در واقع تعداد دفعات `transaction` هر اکانت را نشان می دهد.
+- در واقع `nonce` ب صورت `8 byte` یا `bit 64` می باشد. `0x0000000000000000`
+- در حالت کلی `nonce` یک `hash` می باشد ک با `mixHash` ترکیب شده و نشان دهنده این است ک این `transaction` توسط `miner` وارد چرخه `PoW` شده است.
+
+## Ganache
+در واقع یک `Private Ethereum Blockchain` می باشد. ک برای تست `smart contract` استفاده می شود (ک می توان `development`و `deployment` را روی آن تست کرد.) و با نصب این نرم افزار، دیگر نیازی ب این نداریم ک برای
+چک کردن `transaction` ها ب سایت اصلی برویم.
+
+### Bootstrap
+[Ganache](https://trufflesuite.com/ganache/)
+
+بعد از نصب `Ganache` باید در `truffle.config.js` پورت را ب پورت `ganache` تغییر دهیم.
+
+### app
+- در قسمت `Transactions` برای هر `smart contract` یک بخش `CONTRACT CALL` وجود دارد ک درون آن می توان `TX DATA` را مشاهده کرد ک یک مقدار `byte 32` می باشد ک ب صورت `Hexadecimal` می باشد:
+```txt
+0x[function signiture(8 hex character (4 byte))][64 hex character (32 byte)]
+0xfdacd5760000000000000000000000000000000000000000000000000000000000000002
+```
+- در واقع `function signiture` ترکیبی از نام تابع و تایپ پارامتر های آن تابع می باشد.
+
+ک ب صورت `keccak256` هش شده است و می توان در سایت زیر آن را تست کرد:
+[keccak-256](https://emn178.github.io/online-tools/keccak_256.html)
+
+- همچنین `function signiture` را می توان در قسمت `bytecode` ه `ABI` مربوط ب آن `smart contract` پیدا کرد.
+- همچنین اگر در یک کانورتر `hex` به `decimal` مقدار `32 byte` را قرار دهیم، در این مورد ب ما 2 را نمایش می دهد ک تعداد دفعات کامل شدن تابعمان را در `smart contract` نمایش می دهد.(`Migrations.sol`)
+- در واقع `hex`، `decimal` و `binary` ب صورت زیر مباشند:
+```txt
+Hex:  0 1 2 3 4 5 6 7 8 9 a b c d e f
+Decimal:  0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15
+Binary:  0000 0001 0010 0011 0100 0101 0110 0111 1000 1001 1010 1011 1100 1101 1110 1111
+Binary Form:  (2^3 2^2 2^1 2^0) === (8 4 2 1)
+```
+[Converter](https://www.rapidtables.com/convert/number/hex-to-decimal.html)
+
+## Web3 js
+در واقع `Web3 js` مجموعه ای از ابزار ها و لایبرری ها می باشد ک ب ما در اتصال و کار با یک `node` لوکال یا `remote` در بستر `Ethereum` کمک می کند.
+[Web3](https://web3js.org)
+
+## Solidity
+### Code
+- هرگاه از `public` برای یک `variable` استفاده کنیم، ب صورت خودکار یک تابع با نام آن متغییر ایجاد می شود ک می توان با صدا زدن آن، مقدار متغییر را دریافت کنیم.
+#### receive function
+یک تابع خاص و یک کلمه رزور شده می باشد ک در واقع هرگاه `smart contract` ما صدا زده شود یا یک `transacion` انجام شود، این تابع نیز اجرا می شود:
+```solidity
+contract Faucet {
+    receive() external payable {}
+}
+```
+- در واقع `external` یعنی این تابع قابل صدا زدن توسط `contract` ها و `transaction` ها دیگر می باشد.
+- و `patable` نیز یعنی این تابع می تواند `eth` درون خودش ذخیره کند.
+
+### ABI
+در واقع `ABI` یعنی `Application Binary interface` و یک فایل `json` می باشد ک حاوی تمامی اطلاعات مربوط ب `smart contract` ما می باشد.
+در واقع توسط این فایل می توان `smart contract` مان را در `blockchain` پیدا کنیم و صدا بزنیم.
+
+- در واقع پروسه ب این شکل است ک ابتدا فایل `sol.` را کامپایل می کنیم ب بایت کد و سپس توسط `ABI` ساخته شده، آن را `migrate` می کنیم با `blockchain`
+
+#### bytecode & deployedBytecode
+در `ABI` مربوط ب هر `smart contract` در واقع 2 پراپرتی مهم وجود دارد ک `bytecode` حاوی اطلاعات کل `smart contract` ما می باشد ولی `deployedBytecode` فقط حاول اطلاعاتی می باشد ک ما می خواهیم
+در `blockchain` ذخیره کنیم. (دومی بخشی از اولی می باشد)
+
+
+## Tips
+### Modulo
+برای محاسبه `nonce` در `mining` از `Modulo` استفاده می شود:
+```txt title="Example with 2^3"
+0 % 8 = 0 | 9 % 8 = 1
+1 % 8 = 1 | 10 % 8 = 2
+2 % 8 = 2 | 11 % 8 = 3
+3 % 8 = 3 | 12 % 8 = 4
+4 % 8 = 4 | 13 % 8 = 5
+5 % 8 = 5 | 14 % 8 = 6
+6 % 8 = 6 | 15 % 8 = 7
+7 % 8 = 7 | 16 % 8 = 0
+8 % 8 = 0 | 17 % 8 = 1
+```

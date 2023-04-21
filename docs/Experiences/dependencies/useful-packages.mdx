@@ -41,6 +41,21 @@ yarn add concurrently -D
 }
 ```
 
+## volta
+این پکیج هم مانند `nvm` می باشد، با این فرق ک می توان ورژن هر پکیجی را ب پروژمان `pin` کنیم و همه از یک ورژن خاص استفاده کنند ماننده `node`, `npm` یا `yarn`.
+```shell
+volta list # نمایش تمام پکیج ها و ورژن های نصب شده
+
+volta install [package name]@[version] # lts یا latest نصب ورژنی ک می خواهیم یا استفاده از کلمه
+
+volta uninstall [package name]@[version] # حذف ورژنی ک نصب کرده ایم
+
+volta pin [package name]@[version] # اضافه کردن پکیج مورد نظر با ورژن مورد نظر ب package.json
+
+volta fetch [package name]@[version] # دانلود پکیج مورد نظر با ورژن مورد نظر ب صورت آفلاین، یعنی از آن استفاده نمی کند
+```
+[Volta Refrences](https://docs.volta.sh/reference/)
+
 ## nvm
 بعضی مواقع ما نیاز داریم ک همزمان از چند ورژن از `node` همزمان استفاده کنیم، برای اینکار می توان از `nvm` استفاده کرد ک همزمان چند ورژن از `node` را در اختیار ما قرار می دهد ک برای نصب باید ب صورت زیر عمل کرد:
 
@@ -153,7 +168,6 @@ export const CustomFormField = ({ name, ...props }) => {
     </>
   );};
 ```
-
 
 ## http-server
 یک پکیج عالی برای `serve` کردن یک فایل روی یک پورت خاص:
