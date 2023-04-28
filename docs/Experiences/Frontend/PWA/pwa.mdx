@@ -1,7 +1,6 @@
 ---
 id: pwa
 title: چگونه PWA بسازیم
-author: sina
 ---
 
 :::info
@@ -9,13 +8,11 @@ author: sina
 برای React رو جداگونه مینویسیم.
 :::
 
-
 برای PWA حداقل به سه تا چیز نیاز داریم:
 
 - `manifest.json`
 - `serviceWorker.js`
 - چند سایز آیکون
-
 
 ## آیکون ها
 
@@ -24,31 +21,17 @@ author: sina
 
 مثالش اینه:
 
-
-<div dir="ltr">
-
 ```console
 npx pwa-asset-generator
 ```
-
-</div>
-
-
-
 
 که `photo.png` ادرس لوگویی هست که داریم و عکس های ساخته شده توی یه فولدر به اسم `icons` میرن.
 
 عکس ها باید توی فایل `manifest.json` ثبت بشن.
 
-
-
 ## manifest.json
 
 فایلی هست که اطلاعات کلی اپلیکیشن رو توی خودش نگه میداره. حداقل دیتایی که باید داشته باشیم ایناس:
-
-
-<div dir="ltr">
-
 
 ```json
 {
@@ -73,28 +56,17 @@ npx pwa-asset-generator
 }
 
 ```
-
-</div>
-
 بقیه دیتایی که میشه توی این فایل باشه توی داکیومنتش هست
 لینک داکیومنت هاش:
 
 - [web.dev](https://web.dev/add-manifest/#:~:text=The%20web%20app%20manifest%20is,when%20the%20app%20is%20launched.)
 - [mozilia mdn](https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json)
 
-
-
-
 ## service worker
 
 این فایل جاوااسکریپت قراره منطق کش کردن و فچ کردن دیتا رو کنترل کنه. این فایل باید ثبت بشه (یا نصب بشه یا رجیستر بشه). نصبش به این صورت هست که توی یه تگ `<script>` انجام بشه. یا توی فایل جاوااسکریپتی که ایمپورت بشه
 
-<div dir="ltr">
-
-
 ```js
-
-
 if ("serviceWorker" in navigator) {
     navigator.serviceWorker.register("sw.js").then(reg => {
         console.log("sw registerred")
@@ -104,20 +76,12 @@ if ("serviceWorker" in navigator) {
         console.log(err)
     })
 }
-
-
 ```
-
-
-</div>
 
 **نکته:**
 فایل `sw.js` باید توی روت پروژه باشه. و هر جایی که باشه اسکوپش میشه از همون فایل. پس بهترین جاش همون روت پروژه فرانت و همون کنار `index.html`.
 
 فایل `sw.js` شامل ایناس:
-
-
-<div dir="ltr">
 
 ```js
 const static_assets = [
@@ -145,14 +109,11 @@ self.addEventListener("fetch", e => {
 })
 ```
 
-</div>
-
-
 که روی ۲ event باید کنترلر بذاریم:
 
 ### 1. `install`
 
-توی این بخش نصب کردن سرویس ورکر رو هندل میکنیم و توی این مثال فقط این رو هندل کردیم که دیتایی که از پیش تعیین کردیم (تو یه آرایه به نام `static_asset`) 
+توی این بخش نصب کردن سرویس ورکر رو هندل میکنیم و توی این مثال فقط این رو هندل کردیم که دیتایی که از پیش تعیین کردیم (تو یه آرایه به نام `static_asset`)
 
 ### 2. `fetch`
 
@@ -162,7 +123,6 @@ self.addEventListener("fetch", e => {
 داکیومنتش:
 
 - [mdn](https://developer.mozilla.org/en-US/docs/Web/API/Service_Worker_API)
-
 
 ## لینک ها
 

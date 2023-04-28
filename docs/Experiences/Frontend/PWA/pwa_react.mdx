@@ -1,7 +1,35 @@
 ---
 id: pwa_react
-title: PWA در React
-author: sina
+title: PWA in React
 ---
+## Service Worker
+- در فایل `index.html` مان باید فایل ورکرمان ب صورت `js` باشد.
+1. برای ساخت ابتدا باید در فولدر `public` یک فایل ب صورت زیر بسازیم:
+```js title="public/serviceworker.js"
 
-به زودی
+```
+2. حال باید کد های زیر را ب انتهای کد های `index.html` اضافه کنیم:
+```html title="public/index.html"
+<body>
+<div id="root"></div>
+
+<!-- BEGIN: Service Worker -->
+<script>
+    if ("serviceWorker" in navigator) {
+        window.addEventListener("load", () => {
+            navigator.serviceWorker.register("./serviceworker.js")
+                .then(reg => console.log(`Success: ${reg.scope}`))
+                .catch(err => console.log(`Failure: ${err}`));
+        })
+    }
+</script>
+<!-- END: Service Worker -->
+
+</body>
+```
+
+## Manifest
+- در واقع یک فایل بسیار مهم است ک از هنگامی ک برنامه اجرا می شود، اجرا می شود و حتی بعد از بستن صفحه نیز تا مدتی در حال اجرا می ماند.
+- همچنین می توانند در حالت آفلاین نیز در حال اجرا بمانند.
+- همچنین می توانند کار هایی مثل `push notification` و استفاده از برخی قابلیت های گوشی را انجام دهند.
+
