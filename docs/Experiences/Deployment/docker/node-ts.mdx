@@ -1,0 +1,119 @@
+---
+id: node-ts
+title: Node with TS
+author: mamadfar
+---
+
+## Dcokerfile
+
+To run a Node.js and TypeScript application on Docker, you'll need to create a Dockerfile that installs Node.js and TypeScript, and then builds and runs the application. Here's a step-by-step guide on how to do it:
+
+1. Create a new directory for your application and navigate into it:
+
+```bash
+mkdir my-app && cd my-app
+   ```
+
+2. Create a new `package.json` file with the following content:
+
+```json
+{
+  "name": "my-app",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "start": "node dist/index.js",
+    "build": "tsc"
+  },
+  "dependencies": {
+    "express": "^4.17.1"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.13",
+    "typescript": "^4.3.5"
+  }
+}
+   ```
+
+This will define your Node.js and TypeScript dependencies, as well as the scripts that will build and run your application.
+
+3. Create a new `tsconfig.json` file with the following content:
+
+```json
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "commonjs",
+    "outDir": "dist",
+    "strict": true,
+    "esModuleInterop": true
+  },
+  "exclude": [
+    "node_modules"
+  ]
+}
+   ```
+
+This will define your TypeScript compiler options, and tell it to output the compiled JavaScript files into the `dist` directory.
+
+4. Create a new `Dockerfile` file with the following content:
+
+```Dockerfile
+FROM node:18-alpine
+
+WORKDIR /app
+
+COPY package*.json ./
+
+RUN npm install
+
+COPY . .
+
+RUN npm run build
+
+CMD [ "npm", "start" ]
+```
+
+This Dockerfile will create a new image that's based on the official Node.js 14 Alpine image, copy your `package.json` and `package-lock.json` files into the `/app` directory, install your dependencies, copy the rest of your application files, build your TypeScript code, and start your application.
+
+### Without Docker Compose
+
+5. Build your Docker image by running the following command:
+
+```bash
+docker build -t my-app .
+```
+
+This will build a new Docker image called `my-app`.
+
+6. Run your Docker container by running the following command:
+
+```bash
+docker run -p 8080:8080 my-app
+```
+
+This will run your Docker container and map port 8080 from your host to port 8080 in the container.
+
+That's it! Your Node.js and TypeScript application is now running on Docker. You can access it by visiting `http://localhost:8080` in your web browser.
+
+### With Docker Compose
+
+5. Create a `docker-compose.yml` file:
+```yaml
+version: "3"
+services:
+  app:
+    build: .
+    ports:
+      - "5000:5000"
+    environment:
+      NODE_ENV: production
+      PORT: 5000
+   ```
+This `docker-compose.yml` file defines a service called `app` that builds the Docker image from the Dockerfile in the current directory (`.`). It maps the container port `3000` to the host port `3000`, and sets the `NODE_ENV` environment variable to `production`.
+
+6. Start the application:
+```
+docker-compose up
+   ```
+This command builds the Docker image and starts the container. You should see the application logs in the console.

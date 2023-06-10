@@ -19,9 +19,26 @@ git branch -d [branch name]
 ### reset
 🎉 هرگاه بخواهیم به یک کامیت خاص برگردیم و کامیت های بعد از آن برایمان مهم نباشد، میتوانیم از کد زیر استفاده کنیم تا مستقیما به آنجا برویم و `HEAD` را به آن `commit` تغییر دهیم:
 ```shell
-# reset HEAD to the desired commit
-git reset --hard [commit SHA id]
+git reset --hard [commit SHA id] # reset HEAD to the desired commit
+git reset HEAD~1 --soft # reset HEAD to one commit before without remove the changes (Locally)
 ```
+#### reset on the repo
+1. In case you did push publicly (on a branch called 'master'):
+```shell
+`git checkout -b MyCommit //save your commit in a separate branch just in case (so you don't have to dig it from reflog in case you screw up 😁 )`
+```
+2. revert commit normally and push
+```shell
+git checkout master
+git revert a8172f36 #hash of the commit you want to destroy
+# this introduces a new commit (say, it's hash is 86b48ba) which removes changes, introduced in the commit in question (but those changes are still visible in the history)
+git push origin master
+```
+3. now if you want to have those changes as you local changes in your working copy ("so that your local copy keeps the changes made in that commit") - just revert the revert commit with --no-commit option:
+```shell
+git revert --no-commit 86b48ba (hash of the revert commit).
+```
+
 ### change branch name
 🎉  برای تغییر نام `branch` می توان از کد زیر استفاده کرد:
 ```shell

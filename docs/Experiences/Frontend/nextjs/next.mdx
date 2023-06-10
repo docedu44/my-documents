@@ -1,5 +1,5 @@
 ---
-id: next-hints
+id: next
 title: Next
 ---
 ## Next 13
@@ -452,6 +452,155 @@ export default function Home() {
     );}
 ```
 
+### Server Action
+در واقع یک قابلیت جدید می باشد ک هنوز در حالت آزمایشی قرار دارد ک می توان توسط آن، مواردی مانند `Search` یا `Sort` یا `Pagination` را ب صورت `server component` تبدیل کرد:
+
+1. ابتدا باید در `next.config.js` مشخص کنیم ک می خواهیم از این قابلیت آزمایشی استفاده کنیم:
+```js
+const nextConfig = {
+    experimental: {
+        serverActions: true
+    }
+}
+```
+2. حال می توان درون توابعمان از `use server` استفاده کنیم:
+```tsx
+
+```
+### MongoDB
+می توان ب صورت مستقیم ب `MongoDB` یا هر سیستم ابری دیگری متصل شد ک برای اینکار می توان ب صورت زیر عمل کرد:
+
+**Project**: [`next13-server-action Github`](https://github.com/mamadfar/next13-server-action__nextjs)
+
+1. می توان از `Atlas` استفاده کرد و یک `DB` تست بسازیم.
+2. یک فولدر با نام `backend` در `src` میسازیم.
+3. حال باید پکیج `mongoose` را نصب کنیم.
+4. حال باید آدرس دیتابیس و یوزر و پسووردمان را درون `env.` مثلا با نام `MONGODB_URI` قرار دهیم.
+5. سپس یک فولدر دیگر ب نام `database` میسازیم و فایل `mongodb.ts` را درون آن میسازیم تا کانفیگ های مربوط ب `DB` مان را درون آن قرار دهیم
+```ts title="src/backend/database/mongodb.ts"
+import * as mongoose from "mongoose";
+
+const connectDB = async () => {
+    if (mongoose.connections[0].readyState) {
+        console.log("MongoDB is already connected!");
+        return;
+    }
+    try {
+        await mongoose.connect(process.env.MONGODB_URI);
+        console.log("MongoDB connected!");
+    } catch (e) {
+        console.log(e);
+    }
+};
+
+export default connectDB;
+```
+6. حال می توان فولدر `models` را بسازیم تا بتوانیم `schema` های مورد نظرمان را درون آن قرار دهیم، مثل `post.model.ts`
+```ts title="src/backend/models/post.model.ts"
+import {Schema, model, models, Model} from "mongoose";
+
+const postSchema = new Schema({
+    title: {
+        type: String,
+        required: true
+    },
+    image: {
+        type: String,
+        required: true
+    }
+}, {
+    timestamps: true
+});
+
+const Post:Model<IPost> = models.post || model("post", postSchema);
+
+export default Post;
+```
+7. حال می توان یک کامپوننت ساخت ک طبق این `schema` داده های وارد شده را ب `model` مان بفرستد.
+8. حال نیاز داریم تا یک `controller` یا `action` بسازیم تا در واقع کار `create` کردن `post` در دیتابیس را انجام دهد.
+```ts title="src/backend/actions/post.action.ts"
+"use server";
+
+import connectDB from "@/backend/database/mongodb";
+import Post from "@/backend/models/post.model";
+
+connectDB();
+
+export const createPost = async (post: IPost) => {
+    try {
+        const newPost = new Post(post);
+        await newPost.save();
+
+        return {...newPost._doc, _id: newPost._id.toString()};
+    } catch (e: any) {
+        throw new Error(e?.message || "Failed to create the post!")
+    }
+}
+```
+9. حتما باید `use server` را قرار دهیم.
+- در واقع `save` یکی از توابع `mongoose` می باشد ک داده های مورد نظر ما را توسط `schema` چک و آن را درون `DB` ذخیره می کند.
+- همچنین برای اینکه بتوانیم از خود `id_` استفاده کنیم، باید آن را ب `string` تبدیل کنیم.
+10. حال می توان از `action` یی ک ساختیم درون فرممان استفاده کنیم و داده ها را ب `DB` بفرستیم.
+```tsx title="src/components/PostForm.tsx"
+"use client";
+import {useRef} from "react";
+import {createPost} from "@/backend/actions/post.action";
+
+const PostForm = () => {
+    const formRef = useRef<HTMLFormElement>(null);
+    const handleAction = async (formData: FormData) => {
+        if (!formData.has("title") || !formData.has("image")) return;
+        const post: IPost = {
+            title: formData.get("title") as string,
+            image: formData.get("image") as string,
+        }
+        await createPost(post);
+        formRef.current?.reset();
+    }
+    return (
+        <form ref={formRef} className="flex gap-4 my-7" action={handleAction}>
+            <input type="text" className="pl-2 py-1 border rounded-sm" name="title" placeholder="Title" required/>
+            <input type="text" className="pl-2 py-1 border rounded-sm" name="image" placeholder="Image" required/>
+            <button type="submit" className="border rounded-sm px-5 bg-white py-1">Create</button>
+        </form>
+    )};
+export default PostForm;
+```
+
+### useFormStatus
+توسط این هوک می توان `loading` مربوط ب درخواست توسط `action` های `server action` را در `UI` نمایش داد.
+
+- بهتر است ک یک کامپوننت جدا بسازیم و در آن از این هوک استفاده کنیم:
+```tsx
+"use client";
+import { experimental_useFormStatus as useFormStatus } from 'react-dom';
+import {FC} from "react";
+
+export const ButtonSubmit:FC<{title: string}> = ({title}) => {
+    const { pending } = useFormStatus()
+    return (
+        <button type="submit" className="border rounded-sm px-5 bg-white py-1" disabled={pending}>{pending ? "Loading..." : title}</button>
+    )};
+```
+
+### revalidatePath
+در واقع توسط این تابع، می توان یک بخش را تحت شرایط خاصی یا بعد از انجام عملیاتی، دوباره `revalidate` کرد و بدون رفرش صفحه، داده های جدید را بگیریم:
+```ts
+import {revalidatePath} from "next/cache";
+export const createPost = async (post: IPost) => {
+    try {
+        const newPost = new Post(post);
+        await newPost.save();
+
+        revalidatePath("/");
+
+        return {...newPost._doc, _id: newPost._id.toString()};
+    } catch (e: any) {
+        throw new Error(e?.message || "Failed to create the post!")
+    }
+};
+```
+
 ### Tips
 1. باید در نظر داشت ک تمامی صفحاتی در ک فولدر `app` می سازیم، در واقع `server component` هستند و نمی توان از موارد مربوط ب کلاینت، مانند `event` ها استفاده کرد.
 2. برای استفاده از `event` ها باید در اول فایلمان این 2 کلمه را بنویسیم:
@@ -478,3 +627,11 @@ export default function Home() {
 `out` در واقع نام فولدری می باشد که می خواهیم `serve` شود.
 
 🎉 باید این نکته را در نظر داشت که اگر بخواهیم پروژمان را `export` بگیریم، نمیتوانیم در پروژه مان از `Image` خود `next` استفاده کنیم.
+
+
+- زمانی ک بخواهیم یک عکسی در بالای صفحه، یکی بخشی ک بعد لود صفحه قابل مشاهده است، قرار دهیم، باید از این `attribute` در آن `Image` استفاده کنیم:
+```tsx
+<Image src={image} alt={title} width={200} height={200} priority/>
+```
+🚩 به دلیل رعایت ` Largest Contentful Paint (LCP)`
+[Priority](https://nextjs.org/docs/pages/api-reference/components/image#priority)

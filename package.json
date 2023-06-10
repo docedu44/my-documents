@@ -5,7 +5,7 @@
   "homepage": "https://docedu44.github.io/my-documents/",
   "scripts": {
     "docusaurus": "docusaurus",
-    "start": "docusaurus start",
+    "start": "docusaurus start --port 8000",
     "build": "docusaurus build",
     "swizzle": "docusaurus swizzle",
     "predeploy": "npm run build",
@@ -20,8 +20,8 @@
     "format:diff": "prettier --config .prettierrc --list-different \"**/*.{js,jsx,ts,tsx,md,mdx}\""
   },
   "dependencies": {
-    "@docusaurus/core": "^2.4.0",
-    "@docusaurus/preset-classic": "^2.4.0",
+    "@docusaurus/core": "^2.4.1",
+    "@docusaurus/preset-classic": "^2.4.1",
     "@mdx-js/react": "^1.6.21",
     "clsx": "^1.1.1",
     "react": "^17.0.1",

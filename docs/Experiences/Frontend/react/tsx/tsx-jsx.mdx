@@ -1,0 +1,29 @@
+---
+id: tsx-jsx
+title: TSX & JSX
+---
+این بخش مربوط ب 2 فرمت `tsx` و `jsx` می باشد ک در `Next`، `React` و `React Native` استفاده می شود، در نتیجه مواردی ک گفته می شود در مورد تمامی آن ها صدق می کند.
+
+## useRef
+هر گاه بخواهیم مقادیر تمامی المان ها داخل یک فرم را هنگام `submit` شد بگیریم و بعد از آن فرم را `reset` کنیم، می توانیم از این مثال استفاده کنیم:
+```tsx
+"use client";
+import {useRef} from "react";
+
+export const PostForm = () => {
+    const formRef = useRef<HTMLFormElement>(null);
+
+    const handleAction = async (formData: FormData) => {
+        const title = formData.get("title");
+        const image = formData.get("image");
+        formRef.current?.reset();
+    }
+    return (
+        <form ref={formRef} className="flex gap-4 my-7" action={handleAction}>
+            <input type="text" className="" name="title" placeholder="Title" required/>
+            <input type="text" className="" name="image" placeholder="Image" required/>
+            <button type="submit">Create</button>
+        </form>
+    );
+};
+```

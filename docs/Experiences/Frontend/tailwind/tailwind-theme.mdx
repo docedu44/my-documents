@@ -1,0 +1,72 @@
+---
+id: tailwind-theme
+title: Tailwind Theme
+---
+
+## Dark Mode
+### React - Next
+برای اینکه در این 2 فریمورک، حالت شب و روز را فعال کنیم، باید ب صورت زیر عمل کنیم:
+
+1. ابتدا باید فایل `tailwind.config.js` را تغییر دهیم:
+```js title="tailwind.config.js"
+module.exports = {
+  // ...
+  darkMode: "class"
+}
+```
+🚩 در حالت عادی، در واقع `tailwind` از حالت شب و روز سیستم ما استفاده می کند، ک اگر مورد بالا را در کانفیگ قرار دهیم، می توانیم توسط کلاس دادن ب تگ `html` نیز آن را کنترل کنیم.
+
+2. حال می توان توسط کد های زیر و با استفاده از `localStorage` و چک کردن حالت شب و روز سیستم، کلاس های مورد نظرمان را ب برنامیمان اضافه کنیم:
+```tsx title="src/components/layout/DarkMode.tsx"
+    const [userTheme, setUserTheme] = useState<string | null>(null);
+    const [systemTheme, setSystemTheme] = useState<boolean>(false);
+
+    // * Handle switch theme
+    const themeSwitch = () => {
+        if (document.documentElement.classList.contains("dark")) {
+            document.documentElement.classList.remove("dark");
+            localStorage.setItem("theme", "light");
+            setUserTheme("light");
+        } else {
+            document.documentElement.classList.add("dark");
+            localStorage.setItem("theme", "dark");
+            setUserTheme("dark");
+        }
+    }
+
+    // * Initial user theme based on localStorage
+    useEffect(() => {
+        if (localStorage.getItem("theme")) setUserTheme(localStorage.getItem("theme"))
+    }, []);
+
+
+    // * Initial theme check
+    useEffect(() => {
+        if (typeof window !== "undefined" && window.matchMedia("(prefers-color-scheme: dark)").matches) {
+            setSystemTheme(true);
+            setUserTheme(localStorage.getItem("theme") || "dark");
+        }
+    }, []);
+
+    // * Add 'dark' class to 'html' tag if there is 'theme' key in the localStorage
+    useEffect(() => {
+        if (userTheme === "dark" || (!userTheme && systemTheme)) {
+            document.documentElement.classList.add("dark");
+        }
+    }, [userTheme, systemTheme]);
+```
+
+3. حال می توان از تابع بالا برای `switch` کردن استفاده کنیم:
+```tsx title="src/components/layout/DarkMode.tsx"
+    return (
+        <div onClick={themeSwitch} className="fixed right-3 sm:right-5 bottom-3 sm:bottom-5 bg-black dark:bg-white p-3 rounded-full cursor-pointer">
+            {(userTheme === "dark") ? (
+                <BsFillSunFill className="dark:text-black"/>
+            ) : (
+                <BsFillMoonFill className="text-white"/>
+            )}
+        </div>
+    );
+```
+
+4. حال می توان در کد های `tsx` مان، از کلاس های `:dark` استفاده کنیم.
