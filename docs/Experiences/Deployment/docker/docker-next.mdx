@@ -1,0 +1,147 @@
+---
+id: docker-next
+title: Docker Next
+---
+🚩 برای اینکه بتوان از `docker` در `Next` استفاده کنیم، اگر ورژن `Next` ما `12` می باشد، باید از حالت `experimental` گزینه `standalone` استفاده کنیم:
+```js title="next.config.js"
+/** @type {import('next').NextConfig} */
+module.exports = {
+    experimental: {
+        outputStandalone: true
+    }
+}
+```
+اما اگر از `Next 13` استفاده میکنیم، باید ب صورت زیر عمل کنیم:
+```js title="next.config.js"
+/** @type {import('next').NextConfig} */
+module.exports = {
+  output: 'standalone'
+}
+```
+[standalone](https://nextjs.org/docs/app/api-reference/next-config-js/output)
+## Development
+### Dockerfile
+در این حالت باید یک فایل `Dockerfile` بسازیم و کد های زیر را درون آن قرار دهیم:
+```dockerfile title="Dockerfile"
+FROM node:18-alpine
+
+WORKDIR /app
+
+COPY package.json package-lock.json ./
+RUN npm install
+
+COPY . ./
+
+CMD ["npm", "run", "dev"]
+```
+می نوان از `yarn` نیز استفاده کرد.
+
+### docker-compose
+بهتر است ک از `docker-compose` برای اجرای کانتینر ها استفاده کرد:
+```yaml title="docker-compose.yml"
+version: "3.9"
+
+services:
+  devsteam:
+    image: docker-devsteam
+    build: .
+    ports:
+      - "3020:3020"
+    volumes:
+      - "./src:/app/src"
+      - "./styles:/app/styles"
+      - "./public:/app/public"
+```
+### Command
+برای اجرا می توان از دستور زیر استفاده کرد:
+```shell
+docker-compose up --build --force-recreate
+```
+
+## Production
+در این حالت، `Dockerfile` ما ب چند بخش تقسیم می شود تا حجم `image` مان کاهش پیدا کند.
+### Dockerfile
+در این حالت باید یک فایل `Dockerfile.production` بسازیم و کد های زیر را درون آن قرار دهیم:
+```dockerfile title="Dockerfile.production"
+FROM node:18-alpine AS base
+
+# Install dependencies only when needed
+FROM base AS deps
+# Check https://github.com/nodejs/docker-node/tree/b4117f9333da4138b03a546ec926ef50a31506c3#nodealpine to understand why libc6-compat might be needed.
+RUN apk add --no-cache libc6-compat
+WORKDIR /app
+
+# Install dependencies based on the preferred package manager
+COPY package.json yarn.lock* package-lock.json* pnpm-lock.yaml* ./
+RUN \
+  if [ -f yarn.lock ]; then yarn --frozen-lockfile; \
+  elif [ -f package-lock.json ]; then npm ci; \
+  elif [ -f pnpm-lock.yaml ]; then yarn global add pnpm && pnpm i --frozen-lockfile; \
+  else echo "Lockfile not found." && exit 1; \
+  fi
+
+
+# Rebuild the source code only when needed
+FROM base AS builder
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+
+# Next.js collects completely anonymous telemetry data about general usage.
+# Learn more here: https://nextjs.org/telemetry
+# Uncomment the following line in case you want to disable telemetry during the build.
+# ENV NEXT_TELEMETRY_DISABLED 1
+
+# RUN yarn build
+
+# If using npm comment out above and use below instead
+RUN npm run build
+
+# Production image, copy all the files and run next
+FROM base AS runner
+WORKDIR /app
+
+ENV NODE_ENV production
+# Uncomment the following line in case you want to disable telemetry during runtime.
+# ENV NEXT_TELEMETRY_DISABLED 1
+
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
+
+COPY --from=builder /app/public ./public
+
+# Automatically leverage output traces to reduce image size
+# https://nextjs.org/docs/advanced-features/output-file-tracing
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+
+USER nextjs
+
+EXPOSE 3020
+
+ENV PORT 3020
+
+CMD ["node", "server.js"]
+```
+[Next Dockerfile](https://github.com/vercel/next.js/blob/canary/examples/with-docker/Dockerfile)
+
+می نوان از `yarn` نیز استفاده کرد.
+
+### docker-compose
+بهتر است ک از `docker-compose.production` برای اجرای کانتینر ها استفاده کرد:
+```yaml title="docker-compose.production.yml"
+version: "3.9"
+
+services:
+  devsteam:
+    image: docker-devsteam
+    build:
+      dockerfile: Dockerfile.production
+    ports:
+      - "3020:3020"
+```
+### Command
+برای اجرا می توان از دستور زیر استفاده کرد:
+```shell
+docker-compose -f docker-compose.production.yml up --build --force-recreate
+```

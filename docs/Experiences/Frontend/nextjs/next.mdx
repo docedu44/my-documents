@@ -583,6 +583,115 @@ export const ButtonSubmit:FC<{title: string}> = ({title}) => {
     )};
 ```
 
+### useOptimistic
+یک هوک مربوط ب `next` می باشد ک هنگام گرفتن داده ها از سرور در حالت `server action`، کمک می کند تا `UI` بلاک نشود و بهتر و سریعتر لود شود:
+```tsx
+"use client";
+import {FC, experimental_useOptimistic as useOptimistic} from 'react';
+import {PostCard} from "@/components";
+const PostList:FC<{posts: ReadonlyArray<IPost>}> = ({posts}) => {
+
+    const [optimisticPosts, addOptimisticPosts] = useOptimistic(
+        {posts},
+        (state, newPosts: ReadonlyArray<IPost>) => ({...state, posts: newPosts}),
+    );
+    const handleDelete = async (postId: string | undefined) => {
+        if (window.confirm("Do you want to delete this post?")) {
+            const newPosts = posts.filter(post => post._id !== postId);
+            addOptimisticPosts(optimisticPosts.posts = newPosts);
+            await deletePost(postId);
+        }
+    }
+    return (
+        <section className="flex flex-wrap gap-7 h-full">
+            {optimisticPosts.posts.map(post => (
+                <PostCard key={post._id} post={post} handleDelete={handleDelete}/>
+            ))}
+        </section>
+    )};
+export default PostList;
+```
+تقریبا همان `soft delete` می باشد ک ابتدا آرایه را ب صورت `client`یی آپدیت می کند، سپس `request` زده می شود.
+
+[useOptimistic](https://nextjs.org/docs/app/building-your-application/data-fetching/server-actions#experimental-useoptimistic)
+
+### useSearchParams
+توسط این هوک می توان `query param` ها را از `URL` گرفت و اگر بخواهیم مواردی را ب آن اضافه کنیم، باید از `new URLSearchParams` استفاده کنیم:
+```tsx title="src/hooks/useCustomRouter.tsx"
+"use client";
+import {useRouter, useSearchParams} from "next/navigation";
+
+export const useCustomRouter = () => {
+    const router = useRouter();
+    const searchParams = useSearchParams();
+    const query: {search?: string} = {};
+    let search = searchParams.get("search");
+
+    if (search) query.search = search;
+
+    const pushQuery = ({search}: {search: string}) => {
+        if (search !== undefined) {
+            search === "" ? delete query.search : query.search = search;
+        }
+        const newQuery = new URLSearchParams(query).toString();
+
+        router.push(`?${newQuery}`);
+    }
+    return {pushQuery, query};
+};
+```
+```tsx title="src/components/Search.tsx"
+"use client";
+import {ButtonSubmit} from "@/components";
+import useCustomRouter from "@/hooks/useCustomRouter";
+
+export const Search = () => {
+    const {pushQuery, query} = useCustomRouter();
+
+    const handleSearch = async (formData: FormData) => {
+        const search = formData.get("search") as string;
+        pushQuery({search});
+    }
+    return (
+        <form action={handleSearch}>
+            <input type="search" className="" name="search" placeholder="Search" defaultValue={query.search || ""}/>
+            <ButtonSubmit title="Search"/>
+        </form>
+    )};
+```
+[useSearchParams](https://nextjs.org/docs/app/api-reference/functions/use-search-params)
+
+### useTransition - React
+در واقع یک هوک خود `react` می باشد ک می توان توسط آن، `state` هایی ک باعث بلاک شدن `UI` می شوند را کنترل کرد و آن ها را ب `non-blocking` تبدیل کرد:
+```tsx
+"use client"
+import {FC, useTransition} from 'react';
+
+const PostCard: FC<{ post: IPost }> = ({post}) => {
+
+    const [isPending, startTransition] = useTransition();
+    const {setEditPost} = useMyContext();
+    const {title, image} = post;
+
+    const handleDelete = async (postId: string | undefined) => {
+        if (window.confirm("Do you want to delete this post?")) {
+            await deletePost(postId);
+        }
+    }
+
+    return (
+      <div className="flex justify-between my-5 relative">
+          {isPending && <div className="absolute inset-0 flex justify-center items-center text-xs w-full h-full bg-gray-500/30 z-50 select-none">
+            <AiOutlineLoading3Quarters className="animate-spin"/>
+          </div>}
+          <MdEdit onClick={() => setEditPost(post)} className="text-blue-400 w-6 h-6 cursor-pointer"/>
+          <MdDelete onClick={() => startTransition(() => handleDelete(post._id))} className="text-red-400 w-6 h-6 cursor-pointer"/>
+      </div>
+    )};
+export default PostCard;
+```
+[useTransition](https://react.dev/reference/react/useTransition)
+
 ### revalidatePath
 در واقع توسط این تابع، می توان یک بخش را تحت شرایط خاصی یا بعد از انجام عملیاتی، دوباره `revalidate` کرد و بدون رفرش صفحه، داده های جدید را بگیریم:
 ```ts

@@ -1,0 +1,23 @@
+---
+id: eslint
+title: Eslint
+---
+
+## Errors
+- برای حل ارور زیر می توان ب این صورت عمل کرد:
+```shell
+The config "react-app" was referenced from the config file in "/home/runner/work/project/project/.eslintrc.js".
+```
+1. نصب دوباره پکیج زیر:
+```shell
+pnpm i -D eslint-config-react-app
+```
+2. اضافه کردن کد زیر ب فایل `eslintrc.js.` یا `eslintrc.cjs.`
+```json
+{
+   "extends": [
+      "eslint:recommended",
+      "react-app"
+    ]
+}
+```
