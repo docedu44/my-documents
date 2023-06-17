@@ -4,23 +4,26 @@ title: React Query
 ---
 ابزاریست برای مدیریت `state`، `cache` و `request` های ما و همچنین می توان تعداد `useEffect` های مان را نیز کم کرد و می توان ب صورت زیر استفاده کرد:
 
+## Install and Use
+
 1. نصب خود پکیج و `devtools` آن
 ```shell
 pnpm add @tanstack/react-query @tanstack/react-query-devtools
 ```
-[Installation](https://tanstack.com/query/latest/docs/react/installation)
+🔗 [Installation](https://tanstack.com/query/latest/docs/react/installation)
 
-[Devtools](https://tanstack.com/query/v4/docs/react/devtools)
+🔗 [Devtools](https://tanstack.com/query/latest/docs/react/devtools)
 
 2. نصب پلاگین مربوط ب `eslint`
 ```shell
 pnpm add -D @tanstack/eslint-plugin-query
 ```
-[Eslint Plugin Query](https://tanstack.com/query/latest/docs/react/eslint/eslint-plugin-query)
+🔗 [Eslint Plugin Query](https://tanstack.com/query/latest/docs/react/eslint/eslint-plugin-query)
 
 3. حال می توان از آن در پروژه استفاده کرد:
 ```tsx
 import {QueryClient, QueryClientProvider} from "@tanstack/react-query";
+import {ReactQueryDevtools} from "@tanstack/react-query-devtools";
 
 const queryClient = new QueryClient();
 
@@ -28,7 +31,141 @@ createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
         <App />
+        <ReactQueryDevtools/>
     </QueryClientProvider>
   </React.StrictMode>,
 )
 ```
+🚩 با اضافه کردن `ReactQueryDevtools` در قسمت پایین صفحه، یک آیکون اضافه می شود ک می توان داده ها را درون آن مشاهده کرد ک ب ما
+کمک می کند تا روی داده هایمان کنترل داشته باشیم و خیلی راحت آن ها را `debug` کنیم.
+
+4. حال می توان درون کامپوننت هایمان از آن استفاده کنیم:
+```tsx
+import {useId} from "react";
+import {useQuery, useMutation, useQueryClient} from "@tanstack/react-query";
+
+const POSTS: {id: number | string, title: string}[] = [
+    {id: 1, title: "Post 1"},
+    {id: 2, title: "Post 2"},
+]
+
+const wait = (duration: number) => {
+    return new Promise(resolve => setTimeout(resolve, duration));
+}
+
+export const App = () => {
+
+    const uuid = useId();
+
+    const queryClient = useQueryClient();
+
+    const postsQuery = useQuery({
+        queryKey: ["posts"],
+        queryFn: () => wait(1000).then(() => [...POSTS]),
+        // staleTime: 1000
+    });
+
+    const newPostMutation = useMutation({
+        mutationFn: (title: string) => {
+            return wait(1000).then(() => {
+                POSTS.push({id: crypto.randomUUID(), title})
+            })
+        },
+        onSuccess: () => queryClient.invalidateQueries(["posts"])
+    });
+
+    if (postsQuery.isLoading) return <h1>Loading...</h1>
+    if (postsQuery.isError) return <pre>{JSON.stringify(postsQuery.error)}</pre>
+
+  return (
+    <main>
+        {postsQuery.data.map(post => (
+            <div key={post.id}>{post.title}</div>
+        ))}
+        <button disabled={newPostMutation.isLoading} onClick={() => newPostMutation.mutate(`New Post ${uuid}`)}>Add New Post</button>
+    </main>
+  )}
+```
+### QueryClient
+توسط این تغییر ما ب `react query` می گوییم ک بعد از 5 دقیقه داده های ما ب اصطلاح کهنه می شوند، یعنی ب مدت 5 دقیقه داده های ما را `cache` کن و هیچ درخواستی نزن.
+حالت پیش فرض آن 0 می باشد، یعنی هربار در خواست جدید می زند. این حالت برای تمامی در خواست ها اعمال می شود ک می توان این عمل را برای هر درخواست نیز تغییر داد.
+```js
+const queryClient = new QueryClient({defaultOptions: {queries: {staleTime: 1000 * 60 * 5}}});
+```
+🔗 [QueryClient](https://tanstack.com/query/latest/docs/react/reference/QueryClient)
+### useQuery
+در واقع یک هوک می باشد ک اگر بخواهیم داده ای را بگیریم از آن استفاده می کنیم.
+
+🔗 [useQuery](https://tanstack.com/query/latest/docs/react/reference/useQuery)
+
+#### useQuery().data
+در واقع تمامی داده های برگشتی، درون این `property` قرار میگیرند.
+#### useQuery().status
+در واقع ب ما 3 مقدار `error`, `loading` و `success` را برمی گرداند.
+```js
+    if (postsQuery.status === "loading") return <h1>Loading...</h1>
+    if (postsQuery.status === "error") return <pre>{JSON.stringify(postsQuery.error)}</pre>
+```
+#### useQuery().fetchStatus
+همچنین می توان `state` های مختلف `fetching` را ب این صورت مشاهده کرد:
+```js
+postsQuery.status === "fetching" // "idle" -> without any fetching | "paused" -> lose connection
+```
+#### staleTime
+می توان مشخص کرد ک مثلا ب مدت 1 ثانیه (باید ب میلی ثانیه باشد، مثلا 1000) داده های من را `cache` کن.
+#### queryKey
+در واقع یک `Identifire` می باشد ک حتما باید یونیک باشد.
+
+- در واقع این `key` بسیار مهم است، زیرا ما می خواهیم ک بر اساس یک `key` خاص، تابع `queryFn` اجرا شود و یا آن را `invalidate` کنیم ک می توان از فرم زیر استفاده کرد:
+```js
+// /posts -> ["posts"]
+// /posts/1 -> ["posts", post.id]
+// /posts?authorId=1 -> ["posts", {authorId: 1}]
+// /posts/2/comments -> ["posts", post.id, "comments"]
+```
+🚩 باید در نظر داشت ک `key`یی ک استفاده می کنیم در تابع `queryFn` نیز استفاده شود.
+
+#### queryFn
+یک تابع می باشد ک ب صورت `Promise` می باشد و فقط توابع `Promise` قبول می کند ک کار آن گرفتن داده ها و برگرداندن آن ها می باشد.
+
+🚩 این تابع اگر برای بار اول نتواند داده ها را بگیرد، چندین بار تلاش می کند و سپس اگر ب مشکلی بخورد، ارور را برمیگرداند.
+
+- این تابع چند آرگومان دارد ک یکی از آن ها بسیار مهم است ک آن هم `queryKey` می باشد ک می توان در این تابع ب آن دسترسی داشت:
+```js
+  queryFn: ({queryKey}) => wait(1000).then(() => {
+    console.log(queryKey);
+    return [...POSTS];
+  })
+```
+
+### useMutation
+در واقع هوکی می باشد ک برعکس `useQuery`، برای ارسال داده یا ادیت از آن استفاده میکنیم ک می توان داده ی مورد نظر را ب آن پاس داد.
+
+🔗 [useMutation](https://tanstack.com/query/latest/docs/react/reference/useMutation)
+
+#### mutationFn
+یک تابع می باشد ک ب صورت `Promise` می باشد و فقط توابع `Promise` قبول می کند و دقیقا مانند `queryFn` می باشد، با این فرق ک می توان ب آن داده پاس داد.
+
+#### mutate
+مقدار برگشتی از هوک `useMutation` می باشد ک یک تابع است ک مقادیر مورد نیاز ما را ب هوک می دهد.
+
+#### onSuccess, onError, onSettled, onMutate
+می توان این متد ها را همراه با `useMutation` استفاده کرد.
+
+#### isLoading & isError & error
+در واقع مقادیر برگشتی هوک `useQuery` و `useMutation` می باشد ک می توان از آن ها درون کد ها استفاده کرد و نیاز ب کانفیگ و استفاده از `state` جدا نمی باشد.
+
+### useQueryClient
+در واقع تمامی مقادیر قرار گرفته شده در `()const queryClient = new QueryClient` را ک در کامپوننت اصلی قرار داده ایم را برمیگرداند.
+
+🔗 [useQueryClient](https://tanstack.com/query/latest/docs/react/reference/useQueryClient)
+
+#### invalidateQueries
+و مقادیر برگشتی را می توان توسط `key` های آن ها برگرداند و تغییراتی روی آن ها انجام داد و این `key` ها باید ب صورت `array` ب این متد پاس داده شود.
+
+🔗 [invalidateQueries](https://tanstack.com/query/latest/docs/react/guides/query-invalidation)
+
+## Tips
+1. بهتر است از `axios` همراه با این پکیج استفاده شود بجای `fetch`، زیرا `axios` خودش `error handling` را انجام می دهد.
+2. اگر پیج ما `unfocus` شود و دوباره `focus` شود یا انترنت ما قطع و وصل شود، `react query` دوباره عملیات `fetch` را انجام می دهد.
+3. هم چنین `react query` هنگام جابه جایی بین کامپوننت ها، بخاطر `caching`، ابتدا داده های قبلی را نشان می دهد و پشت صحنه دوباره داده ها را `fetch` می کند و با داده های قبلی جایگزین می کند.
