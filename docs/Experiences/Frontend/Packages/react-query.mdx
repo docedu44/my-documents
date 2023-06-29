@@ -4,8 +4,9 @@ title: React Query
 ---
 ابزاریست برای مدیریت `state`، `cache` و `request` های ما و همچنین می توان تعداد `useEffect` های مان را نیز کم کرد و می توان ب صورت زیر استفاده کرد:
 
-## Install and Use
+[**`Github - React Query Practice`**](https://github.com/mamadfar/react-query_practice__react)
 
+## Install and Use
 1. نصب خود پکیج و `devtools` آن
 ```shell
 pnpm add @tanstack/react-query @tanstack/react-query-devtools
@@ -60,9 +61,10 @@ export const App = () => {
     const queryClient = useQueryClient();
 
     const postsQuery = useQuery({
-        queryKey: ["posts"],
-        queryFn: () => wait(1000).then(() => [...POSTS]),
-        // staleTime: 1000
+        queryKey: ["posts"], // 1
+        queryFn: () => wait(1000).then(() => [...POSTS]), // 2
+        staleTime: 1000, // 3
+        refetchInterval: 1000, // 4
     });
 
     const newPostMutation = useMutation({
@@ -111,9 +113,7 @@ const queryClient = new QueryClient({defaultOptions: {queries: {staleTime: 1000 
 ```js
 postsQuery.status === "fetching" // "idle" -> without any fetching | "paused" -> lose connection
 ```
-#### staleTime
-می توان مشخص کرد ک مثلا ب مدت 1 ثانیه (باید ب میلی ثانیه باشد، مثلا 1000) داده های من را `cache` کن.
-#### queryKey
+#### 1. queryKey
 در واقع یک `Identifire` می باشد ک حتما باید یونیک باشد.
 
 - در واقع این `key` بسیار مهم است، زیرا ما می خواهیم ک بر اساس یک `key` خاص، تابع `queryFn` اجرا شود و یا آن را `invalidate` کنیم ک می توان از فرم زیر استفاده کرد:
@@ -125,7 +125,7 @@ postsQuery.status === "fetching" // "idle" -> without any fetching | "paused" ->
 ```
 🚩 باید در نظر داشت ک `key`یی ک استفاده می کنیم در تابع `queryFn` نیز استفاده شود.
 
-#### queryFn
+#### 2. queryFn
 یک تابع می باشد ک ب صورت `Promise` می باشد و فقط توابع `Promise` قبول می کند ک کار آن گرفتن داده ها و برگرداندن آن ها می باشد.
 
 🚩 این تابع اگر برای بار اول نتواند داده ها را بگیرد، چندین بار تلاش می کند و سپس اگر ب مشکلی بخورد، ارور را برمیگرداند.
@@ -137,6 +137,55 @@ postsQuery.status === "fetching" // "idle" -> without any fetching | "paused" ->
     return [...POSTS];
   })
 ```
+- همچنین می توان از `signal` برای `abort` کردن درخواست ها نیز استفاده کرد:
+```js
+    const {data} = useQuery({
+        queryKey: ["book", bookId],
+        queryFn: ({queryKey, signal}) => getBook(queryKey[1], signal)
+    });
+```
+#### 3. staleTime
+می توان مشخص کرد ک مثلا ب مدت 1 ثانیه (باید ب میلی ثانیه باشد، مثلا 1000) داده های من را `cache` کن.
+#### 4. refetchInterval
+می توان مشخص کرد ک این درخواست ما هر چند میلی ثانیه یکبار انجام شود
+
+#### enabled
+توسط این گزینه می توان مشخص کرد ک یک درخواست در چ حالت هایی اجرا شود ک ب صورت `boolean` می باشد.
+
+مثلا در مثال پایین، `userQuery` در واقع ب رسپانس `postQuery` وابسته است،
+پس توسط این گزینه مشخص می کنیم ک فقط زمانی `userQuery` اجرا شود ک ما یک `userId` از `postQuery` دریافت کرده باشیم.
+```tsx
+export const Post:FC<{id: number}> = ({id}) => {
+
+    const postQuery = useQuery({
+        queryKey: ["posts", id],
+        queryFn: () => getPostService(id),
+    });
+
+    const userQuery = useQuery({
+        queryKey: ["users", postQuery?.data?.userId],
+        queryFn: () => getUserService(postQuery?.data?.userId),
+        enabled: postQuery?.data?.userId != null,
+    });
+
+    if (postQuery.status === "loading") return <h1>Loading...</h1>;
+    if (postQuery.status === "error") return <h1>{JSON.stringify(postQuery.error)}</h1>;
+
+    return (
+        <section>
+            <h1>{postQuery?.data?.title}</h1>
+            <small>{userQuery.isLoading
+                ? "Loading User..."
+                : userQuery.isError
+                    ? "Error Loading User"
+                    : userQuery.data.name
+            }
+            </small>
+            <p>{postQuery.data.body}</p>
+        </section>
+    )};
+```
+[enabled](https://tanstack.com/query/v4/docs/react/guides/disabling-queries)
 
 ### useMutation
 در واقع هوکی می باشد ک برعکس `useQuery`، برای ارسال داده یا ادیت از آن استفاده میکنیم ک می توان داده ی مورد نظر را ب آن پاس داد.

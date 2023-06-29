@@ -1,0 +1,69 @@
+---
+id: small-packages
+title: Small Packages
+---
+
+### next-nprogress-bar
+پکیجی برای نمایش `progressbar` مخصوص `Next`
+
+[**`Github - Old Lit - Progressbar Provider`**](https://github.com/mamadfar/oldlit__nextjs/blob/main/src/components/layout/ProgressBarProvider.tsx)
+```shell
+pnpm add next-nprogress-bar
+```
+#### app directory
+1. فایلی با نام `ProgressbarProvider.tsx` می سازیم:
+```tsx title="src/components/layout/ProgressbarProvider.tsx"
+"use client";
+import ProgressBar from 'next-nprogress-bar';
+
+const ProgressbarProvider: FC<{ children: ReactNode }> = ({children}) => {
+    return (
+        <>
+            <ProgressBar
+                height="4px"
+                color="#dc2626"
+                options={{ showSpinner: true }}
+                shallowRouting
+                appDirectory
+            />
+            {children}
+        </>
+    );
+};
+export default ProgressbarProvider;
+```
+2. حال در `layout.tsx` اصلی، ب این صورت از آن استفاده می کنیم:
+```tsx title="src/app/layout.tsx"
+export default function RootLayout({children}: { children: ReactNode }) {
+    return (
+        <html lang="en">
+        <body className={`${inter.className} min-h-screen flex flex-col dark:bg-black`}>
+        <Provider>
+            <ProgressBarProvider>
+                <Header/>
+                <Content>{children}</Content>
+                <DarkMode/>
+                <Footer/>
+            </ProgressBarProvider>
+        </Provider>
+        </body>
+        </html>
+    )
+}
+```
+[Next NProgressbar](https://github.com/Skyleen77/next-nprogress-bar)
+
+### concurrently
+پکیجی برای اجرای چند دستور ب صورت همزمان:
+```shell
+pnpm add concurrently
+```
+#### How to use
+```json title="package.json"
+{
+  "scripts": {
+    "dev:server": "concurrently \"json-server --watch api/db.json\" \"vite\""
+  }
+}
+```
+[Concurrently](https://github.com/open-cli-tools/concurrently)
