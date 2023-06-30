@@ -9,3 +9,50 @@ title: SCSS
 yarn add sass -D
 ```
 🎉 ب صورت پیش فرض `react` این پکیج را ندارد و برای استفاده از `scss` باید این پکیج را نصب کنیم.
+
+## Usage
+
+### mixin
+قطعه کد هایی `reusable`یی هستند ک می توان در جاهای مختلف با آرگومان های ورودی مختلف استفاده کرد:
+```scss
+@mixin circle($width,$height,$color,$radius) {
+    width: $width;
+    height: $height;
+    background: $color;
+    // passed argument to border-radius to have control over it
+    border-radius: $radius;
+}
+@mixin text($font-size,$color,$bg-color) {
+
+     // we pass the $font-size to font-size property
+    font-size: $font-size;
+
+    // we pass the $color to color property
+    color: $color;
+
+    // we pass the $bg-color to background property
+    background: $bg-color;
+}
+```
+حال می توان از آن در جاهای مختلف با مقادیر مختلف استفاده کرد:
+```scss
+.square {
+    // ($width,$height,$color,$radius)
+    @include circle (350px,350px,red, 10px);
+}
+.circle {
+    // ($width,$height,$color,$radius)
+    @include circle (200px,200px,green, 50%);
+}
+
+.text1 {
+    // ($font-size,$color,$bg-color)
+    @include text(3rem,green , black)
+}
+
+.text2 {
+    // ($font-size,$color,$bg-color)
+    @include text(5em,red , transparent)
+}
+```
+- ترتیب آرگومان ها مهم است!
