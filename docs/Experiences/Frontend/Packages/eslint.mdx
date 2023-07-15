@@ -3,7 +3,7 @@ id: eslint
 title: Eslint
 ---
 
-## Errors
+## Errors & Warns
 - برای حل ارور زیر می توان ب این صورت عمل کرد:
 ```shell
 The config "react-app" was referenced from the config file in "/home/runner/work/project/project/.eslintrc.js".
@@ -21,3 +21,25 @@ pnpm i -D eslint-config-react-app
     ]
 }
 ```
+🔗 [eslint discord](https://discord.com/channels/688543509199716507/1098630038133428315/1098630038133428315)
+
+- برای حل ارور یا وارنینگ زیر می توان ب این صورت عمل کرد:
+```shell
+Assign object to a variable before exporting as module default "import/no-anonymous-default-export."
+```
+```js title=".eslintrc.cjs"
+rules: {
+    //...
+    "import/no-anonymous-default-export": ["error", {
+        "allowArray": false,
+        "allowArrowFunction": false,
+        "allowAnonymousClass": false,
+        "allowAnonymousFunction": false,
+        "allowCallExpression": false, // backward compatibility -> e.g. export default defineConfig({})
+        "allowNew": false,
+        "allowLiteral": false,
+        "allowObject": true
+    }]
+}
+```
+🔗 eslint-plugin-import -> [no-anonymous-default-export](https://github.com/import-js/eslint-plugin-import/blob/main/docs/rules/no-anonymous-default-export.md)

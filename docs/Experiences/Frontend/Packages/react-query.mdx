@@ -148,6 +148,15 @@ postsQuery.status === "fetching" // "idle" -> without any fetching | "paused" ->
 می توان مشخص کرد ک مثلا ب مدت 1 ثانیه (باید ب میلی ثانیه باشد، مثلا 1000) داده های من را `cache` کن.
 #### 4. refetchInterval
 می توان مشخص کرد ک این درخواست ما هر چند میلی ثانیه یکبار انجام شود
+#### refetchOnMount
+به صورت پیش فرض، `react query` دوبار درخواست ما را انجام می دهد، ک توسط این پراپرتی، می توان آن را کنترل کرد.
+
+همچنین باید در نظر داشت، مثلا زمانی ک ما دکمه ای داریم ک قرار قسمتی از داده های گرفته شده را در شرایط خاصی نمایش دهد، اگر این گزینه را `false` نکنیم،
+هربار ک کامپوننتی ک مسول نمایش آن بخش است، در صفحه ظاهر می شود، یکبار درخواست انجام می شود اما اگر `false` باشد، داده ها `cache` می شوند و درخواست اضافه ای زده نمی شود.
+
+زمانی این گزینه باید `true` باشد ک آن بخش ک می خواهیم در شرایط خاص نمایش داده شود، بسیار داینامیک باشد.
+#### refetchOnWindowFocus
+می توان `request` زدن را روی حالت `focus` و `unfocus` کنترل کرد.
 
 #### enabled
 توسط این گزینه می توان مشخص کرد ک یک درخواست در چ حالت هایی اجرا شود ک ب صورت `boolean` می باشد.
@@ -232,7 +241,6 @@ export const Post:FC<{id: number}> = ({id}) => {
         },
     });
 ```
-
 
 #### onSuccess, onError, onSettled, onMutate
 می توان این متد ها را همراه با `useMutation` استفاده کرد.
@@ -339,7 +347,43 @@ export const Post:FC<{id: number}> = ({id}) => {
 
 🔗 [setQueryData](https://tanstack.com/query/v4/docs/react/reference/QueryClient#queryclientsetquerydata)
 
+#### getQueryData & cancelQueries
+بعضی مواقع ما نیاز داریم ک قبل از اینکه داده ما ب بک ارسال شود، در `UI` آپدیت شود و اگر اروری داشتیم، داده ها را ب حالت قبل برگردانیم، ک در این حالت می توانیم از `Optimistic Updates` ب صورت زیر استفاده کنیم:
+```tsx
+useMutation({
+  mutationFn: updateTodo,
+  // When mutate is called:
+  onMutate: async (newTodo) => {
+    // Cancel any outgoing refetches
+    // (so they don't overwrite our optimistic update)
+    await queryClient.cancelQueries({ queryKey: ['todos', newTodo.id] })
+
+    // Snapshot the previous value
+    const previousTodo = queryClient.getQueryData(['todos', newTodo.id])
+
+    // Optimistically update to the new value
+    queryClient.setQueryData(['todos', newTodo.id], newTodo)
+
+    // Return a context with the previous and new todo
+    return { previousTodo, newTodo }
+  },
+  // If the mutation fails, use the context we returned above
+  onError: (err, newTodo, context) => {
+    queryClient.setQueryData(
+      ['todos', context.newTodo.id],
+      context.previousTodo,
+    )
+  },
+  // Always refetch after error or success:
+  onSettled: (newTodo) => {
+    queryClient.invalidateQueries({ queryKey: ['todos', newTodo.id] })
+  },
+})
+```
+🔗 [Optimistic Updates](https://tanstack.com/query/v4/docs/react/guides/optimistic-updates)
+
 ## Tips
 1. بهتر است از `axios` همراه با این پکیج استفاده شود بجای `fetch`، زیرا `axios` خودش `error handling` را انجام می دهد.
 2. اگر پیج ما `unfocus` شود و دوباره `focus` شود یا انترنت ما قطع و وصل شود، `react query` دوباره عملیات `fetch` را انجام می دهد.
 3. هم چنین `react query` هنگام جابه جایی بین کامپوننت ها، بخاطر `caching`، ابتدا داده های قبلی را نشان می دهد و پشت صحنه دوباره داده ها را `fetch` می کند و با داده های قبلی جایگزین می کند.
+4. می توان یک کاستوم هوک درست کرد و درخواستمان را با `react query` بزنیم و آن را در کامپوننت های فرزند ک کامپوننت استفاده کنیم، بدون آنکه چندین بار این درخواست زده شود.
