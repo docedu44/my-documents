@@ -1,0 +1,96 @@
+---
+id: zustand
+title: Zustand
+---
+
+[Github Repo - Zustand test app]('https://github.com/mamadfar/zustand__react')
+
+## نصب
+```bash
+npm install zustand
+```
+### devtools
+- می توان از `devtools` خود ریکت هم برای این پکیج استفاده کرد.
+```ts
+export const useStore = create<ITaskStore>()(devtools((set) => ({
+  //...
+})))
+```
+
+### persist
+می توان داده ها را نیز در `localstorage` ذخیره کرد.
+```ts
+export const useStore = create<ITaskStore>()(persist(devtools((set) => ({
+  //...
+})), {name: 'task-store'}))
+```
+- باید یک نام برای ذخیره سازی داده ها انتخاب کنیم.
+
+### Custom Middlewares
+می توان ب صورت زیر یک میدل ویر سفارشی نیز اضافه کرد.
+```ts
+const logger = (config: any) => (set: any, get: any, api: any) => config(
+    (...args: any[]) => {
+        console.log(args);
+        set(...args);
+    },
+    get,
+    api
+)
+
+export const useStore = create<ITaskStore>()(logger(persist(devtools((set) => ({
+  //...
+})), {name: 'task-store'})))
+```
+
+### Test
+برای تست باید موارد پایین ابتدا نصب شوند:
+```bash
+pnpm add -D vitest jsdom @testing-library/react @testing-library/jest-dom
+```
+- در فایل `package.json` باید موارد زیر اضافه شوند:
+```json
+"scripts": {
+  "test": "vite test"
+},
+```
+- در فایل `vite.config.ts` باید موارد زیر اضافه شوند:
+```ts
+export default defineConfig({
+  // ...
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    setupFiles: './setupTests.ts'
+  }
+})
+```
+- در فایل `setupTests.ts` باید موارد زیر اضافه شوند:
+```ts
+import {expect, afterEach} from "vitest";
+import {cleanup} from "@testing-library/react";
+import * as matchers from "@testing-library/jest-dom/matchers";
+import '@testing-library/jest-dom';
+
+expect.extend(matchers);
+
+afterEach(cleanup);
+```
+
+### Immer
+می توان از `Immer` نیز ب صورت زیر استفاده کرد:
+```bash
+pnpm add immer
+```
+```ts
+export const useStore = create<ITaskStore>()(persist(devtools(immer((set) => ({
+  //...
+    addTask: (title: string, state: string, id?: number) => set(
+        store => ({tasks: [...store.tasks, {id: id ? id : Math.floor(Math.random() * 999999999), title, state}]})
+        ,false, 'addTask'),
+  //...
+}))), {name: 'task-store'}))
+```
+
+### Tips
+- می توان از `async` فانکشن هم استفاده کرد و در استور برای `fetch` کردن داده ها از آن استفاده کرد.

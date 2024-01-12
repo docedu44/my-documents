@@ -48,7 +48,7 @@ export const reducers = combineReducers({
 ```js title="./app/store/index.js"
 import { createStore, applyMiddleware, compose } from "redux";
 import thunk from "redux-thunk";
-import { reducers } from "./reducers";
+import { reducers } from "./reducers.mdx";
 
 export const store = createStore(reducers, compose(applyMiddleware(thunk)));
 ```
