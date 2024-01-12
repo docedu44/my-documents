@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunkmy_documents=self.webpackChunkmy_documents||[]).push([[2205],{5127:s=>{s.exports=JSON.parse('{"label":"hola","permalink":"/my-documents/blog/tags/hola","allTagsPath":"/my-documents/blog/tags","count":1,"unlisted":false}')}}]);
